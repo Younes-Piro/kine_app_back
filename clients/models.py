@@ -1,7 +1,7 @@
 from django.db import models
-from app_settings.models import AppOption, Holiday, ClinicClosedDay, ClinicClosureRange
-from datetime import date, timedelta
-from datetime import timedelta
+from app_settings.models import AppOption
+from app_settings import scheduling
+from datetime import date
 from decimal import Decimal
 
 class Client(models.Model):
@@ -129,50 +129,28 @@ class Treatment(models.Model):
    def _rhythm_sessions_per_week(self):
     if not self.session_rhythm:
         return None
-    mapping = {
-        "1_per_week": 1,
-        "2_per_week": 2,
-        "3_per_week": 3,
-    }
-    return mapping.get(self.session_rhythm.code)
+    return scheduling.get_sessions_per_week(self.session_rhythm.code)
    
    def _session_days_for_week(self):
-    sessions_per_week = self._rhythm_sessions_per_week()
-    if sessions_per_week == 1:
-        return [0]          # Monday
-    elif sessions_per_week == 2:
-        return [0, 3]       # Monday, Thursday
-    elif sessions_per_week == 3:
-        return [0, 2, 4]    # Monday, Wednesday, Friday
-    return [] 
+    if not self.session_rhythm:
+        return []
+    return scheduling.get_session_weekdays(self.session_rhythm.code)
 
    def _closed_weekdays(self):
-    return set(
-        ClinicClosedDay.objects.filter(is_active=True)
-        .values_list("weekday", flat=True)
-    )
+    return scheduling.get_closed_weekdays()
 
    def _holiday_dates(self):
-    return set(
-        Holiday.objects.filter(is_active=True)
-        .values_list("date", flat=True)
-    )
+    return scheduling.get_holiday_dates()
 
    def _is_in_closure_range(self, date_value):
-    return ClinicClosureRange.objects.filter(
-        is_active=True,
-        start_date__lte=date_value,
-        end_date__gte=date_value
-    ).exists()
+    return scheduling.is_in_closure_range(date_value)
 
    def _is_working_day(self, date_value):
-    if date_value.weekday() in self._closed_weekdays():
-        return False
-    if date_value in self._holiday_dates():
-        return False
-    if self._is_in_closure_range(date_value):
-        return False
-    return True
+    return scheduling.is_working_day(
+        date_value,
+        closed_weekdays=self._closed_weekdays(),
+        holiday_dates=self._holiday_dates(),
+    )
    
    def _calculate_end_date(self):
     if not self.start_date or not self.session_rhythm or not self.prescribed_sessions:
@@ -182,18 +160,12 @@ class Treatment(models.Model):
     remaining_sessions = self.prescribed_sessions - self.completed_sessions
     if remaining_sessions <= 0:
         return date.today()
-    session_days = self._session_days_for_week()
-    if not session_days:
-        return None
     current_date = max(self.start_date, date.today()) if self.completed_sessions > 0 else self.start_date
-    sessions_counted = 0
-    while sessions_counted < remaining_sessions:
-        if self._is_working_day(current_date) and current_date.weekday() in session_days:
-            sessions_counted += 1
-            if sessions_counted == remaining_sessions:
-                return current_date
-        current_date += timedelta(days=1)
-    return current_date
+    return scheduling.calculate_end_date(
+        start_date=current_date,
+        num_sessions=remaining_sessions,
+        rhythm_code=self.session_rhythm.code,
+    )
    
    def generate_sessions(self):
     from client_sessions.models import Session
@@ -209,38 +181,17 @@ class Treatment(models.Model):
     ).first()
     if not scheduled_status:
         return
-    session_days = self._session_days_for_week()
-    closed_days = set(
-        ClinicClosedDay.objects.filter(is_active=True)
-        .values_list("weekday", flat=True)
+    session_dates = scheduling.generate_session_dates(
+        start_date=self.start_date,
+        num_sessions=self.prescribed_sessions,
+        rhythm_code=self.session_rhythm.code,
     )
-    holidays = set(
-        Holiday.objects.filter(is_active=True)
-        .values_list("date", flat=True)
-    )
-    closure_ranges = list(
-        ClinicClosureRange.objects.filter(is_active=True)
-    )
-    current_date = self.start_date
-    sessions_created = 0
-    while sessions_created < self.prescribed_sessions:
-        is_closure_range = any(
-            r.start_date <= current_date <= r.end_date
-            for r in closure_ranges
+    for session_date in session_dates:
+        Session.objects.create(
+            treatment=self,
+            session_date=session_date,
+            status=scheduled_status,
         )
-        if (
-            current_date.weekday() in session_days
-            and current_date.weekday() not in closed_days
-            and current_date not in holidays
-            and not is_closure_range
-        ):
-            Session.objects.create(
-                treatment=self,
-                session_date=current_date,
-                status=scheduled_status,
-            )
-            sessions_created += 1
-        current_date += timedelta(days=1)
    def save(self, *args, **kwargs):
        is_new = self.pk is None
        self.end_date = self._calculate_end_date()

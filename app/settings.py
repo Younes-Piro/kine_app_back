@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "client_sessions.apps.ClientSessionsConfig",
     "app_settings",
     "payments.apps.PaymentsConfig",
+    "invoices.apps.InvoicesConfig",
 ]
 
 MIDDLEWARE = [

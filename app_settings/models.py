@@ -9,6 +9,7 @@ class AppOption(models.Model):
    CATEGORY_SESSION_STATUS = "session_status"
    CATEGORY_PAYMENT_STATUS = "payment_status"
    CATEGORY_PAYMENT_METHOD = "payment_method"
+   CATEGORY_INVOICE_TYPE = "invoice_type"
    CATEGORY_CHOICES = [
        (CATEGORY_GENDER, "Gender"),
        (CATEGORY_DOSSIER_TYPE, "Dossier Type"),
@@ -18,6 +19,7 @@ class AppOption(models.Model):
        (CATEGORY_SESSION_STATUS, "Session Status"),
        (CATEGORY_PAYMENT_STATUS, "Payment Status"),
        (CATEGORY_PAYMENT_METHOD, "Payment Method"),
+       (CATEGORY_INVOICE_TYPE, "Invoice Type"),
    ]
    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
    code = models.CharField(max_length=100)

@@ -42,6 +42,10 @@ DATA = {
         ("bank_transfer", "Bank Transfer"),
         ("check", "Check"),
     ],
+    "invoice_type": [
+        ("cnss", "CNSS"),
+        ("particulier", "Particulier"),
+    ],
 }
 class Command(BaseCommand):
    def handle(self, *args, **kwargs):
