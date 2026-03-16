@@ -1,0 +1,6 @@
+from rest_framework.routers import DefaultRouter
+from .views import SessionViewSet
+
+router = DefaultRouter()
+router.register("", SessionViewSet, basename="client-sessions")
+urlpatterns = router.urls
