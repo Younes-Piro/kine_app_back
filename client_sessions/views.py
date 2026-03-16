@@ -21,6 +21,7 @@ class SessionViewSet(viewsets.ModelViewSet):
        "create": "session:create",
        "update": "session:update",
        "partial_update": "session:update",
+       "destroy": "session:delete",
        "mark_completed": "session:update",
    }
    def get_queryset(self):

@@ -28,7 +28,8 @@ class ClientViewSet(viewsets.ModelViewSet):
        "create": "client:create",
        "update": "client:update",
        "partial_update": "client:update",
-       "deactivate": "client:update",
+       "destroy": "client:delete",
+       "deactivate": "client:delete",
    }
    def destroy(self, request, *args, **kwargs):
        return Response(
@@ -40,7 +41,10 @@ class ClientViewSet(viewsets.ModelViewSet):
        client = self.get_object()
        client.is_active = False
        client.save()
-       return Response({"detail": "Client deactivated successfully."})
+       client.treatments.filter(is_active=True).update(is_active=False)
+       return Response(
+           {"detail": "Client and related treatments deactivated successfully."}
+       )
 
 class TreatmentViewSet(viewsets.ModelViewSet):
    queryset = Treatment.objects.select_related(
@@ -64,7 +68,8 @@ class TreatmentViewSet(viewsets.ModelViewSet):
        "create": "treatment:create",
        "update": "treatment:update",
        "partial_update": "treatment:update",
-       "deactivate": "treatment:update",
+       "destroy": "treatment:delete",
+       "deactivate": "treatment:delete",
        "balance": "treatment:view",
    }
    def get_queryset(self):
@@ -89,7 +94,10 @@ class TreatmentViewSet(viewsets.ModelViewSet):
        treatment = self.get_object()
        treatment.is_active = False
        treatment.save()
-       return Response({"detail": "Treatment deactivated successfully."})
+       treatment.payments.filter(is_active=True).update(is_active=False)
+       return Response(
+           {"detail": "Treatment and related payments deactivated successfully."}
+       )
 
    @action(detail=True, methods=["get"])
    def balance(self, request, pk=None):

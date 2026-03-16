@@ -1,211 +1,171 @@
-# Permission Enforcement System — Implementation Plan
+# Delete Behavior Optimization — Implementation Plan
 
-## Background
+## Current State Audit
 
-The project already has a working permission infrastructure:
+| Module | [destroy()](file:///Users/macbook/Desktop/kine_app/users/views.py#25-30) | Deactivation | `is_active` field | Inconsistency |
+|--------|-------------|-------------|-------------------|---------------|
+| **Clients** | 405 | [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38) action | ✅ Yes | — |
+| **Treatments** | 405 | [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38) action | ✅ Yes | — |
+| **Users** | 405 | [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38) action | ✅ Yes | — |
+| **Payments** | Soft delete in [destroy()](file:///Users/macbook/Desktop/kine_app/users/views.py#25-30) | Via [destroy()](file:///Users/macbook/Desktop/kine_app/users/views.py#25-30) | ✅ Yes | ⚠️ Different pattern |
+| **Sessions** | 405 | ❌ None | ❌ No field | ⚠️ No deactivation path |
+| **Invoices** | 405 | ❌ None | ❌ No field | ✅ Correct — immutable |
+| **AppSettings** | Allowed (DRF default) | ❌ None | ✅ Yes (on models) | ⚠️ Hard delete exposed |
 
-| Component | Location | Details |
-|-----------|----------|---------|
-| [Permission](file:///Users/macbook/Desktop/kine_app/permissions/models.py#4-9) model | [permissions/models.py](file:///Users/macbook/Desktop/kine_app/permissions/models.py) | `code` (unique), `label` |
-| [ProfilePermission](file:///Users/macbook/Desktop/kine_app/permissions/models.py#10-25) | Same file | M2M join: `profile` → [permission](file:///Users/macbook/Desktop/kine_app/users/views.py#14-21) |
-| [Profile](file:///Users/macbook/Desktop/kine_app/users/models.py#4-20) model | [users/models.py](file:///Users/macbook/Desktop/kine_app/users/models.py) | `role`: `"admin"` or `"staff"` |
-| Permissions endpoint | [permissions/views.py](file:///Users/macbook/Desktop/kine_app/permissions/views.py) | `GET /api/permissions/me/` returns current user's codes |
-| [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21) | Duplicated in 3 files | [permissions/views.py](file:///Users/macbook/Desktop/kine_app/permissions/views.py), [users/views.py](file:///Users/macbook/Desktop/kine_app/users/views.py), [app_settings/views.py](file:///Users/macbook/Desktop/kine_app/app_settings/views.py) |
+## Proposed Strategy: Three Tiers
 
-**Current state**: All endpoints use only `IsAuthenticated`. Some admin-only endpoints also use a local [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21). No DB permission codes are enforced anywhere.
+### Tier 1 — Immutable Records (no delete, no deactivate)
+**Invoices** — Legal snapshot documents. Once created, they must persist. Current behavior (405, no deactivate) is **correct**. No changes needed.
 
-**Goal**: Add a reusable DRF permission class that checks DB permission codes on every action, with admin bypass.
+### Tier 2 — Soft-Deactivatable Records
+**Clients, Treatments, Payments, Users** — Business records that should never be hard deleted but can be deactivated.
+
+Standardized pattern:
+- [destroy()](file:///Users/macbook/Desktop/kine_app/users/views.py#25-30) → returns **405** with message pointing to [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38)
+- [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38) → custom PATCH action, sets `is_active = False`
+- List querysets optionally filter out inactive records
+
+### Tier 3 — Status-Managed Records (no delete, status-driven)
+**Sessions** — Lifecycle managed via [status](file:///Users/macbook/Desktop/kine_app/clients/serializers.py#46-50) field (scheduled → completed / cancelled / missed). Sessions should not be deleted or deactivated; they change status instead. Current behavior (405, no deactivate) is **correct**. No changes needed.
+
+### Settings — Admin-Controlled
+**AppOption, Holiday, ClinicClosedDay, ClinicClosureRange** — These already have `is_active` fields. Block hard delete, add deactivate via the `is_active` field.
 
 ---
 
 ## Proposed Changes
 
-### Component 1 — Permission Service
-
-#### [NEW] [services.py](file:///Users/macbook/Desktop/kine_app/permissions/services.py)
-
-Centralized permission helper functions:
-
-- **`get_user_permission_codes(user)`** — Returns a [set](file:///Users/macbook/Desktop/kine_app/client_sessions/views.py#17-26) of permission code strings assigned to the user's profile. If user is admin, returns all permission codes.
-- **`user_has_permission(user, permission_code)`** — Returns `True` if the user is admin OR has the specific permission code assigned.
-
----
-
-### Component 2 — DRF Permission Class
-
-#### [NEW] [drf_permissions.py](file:///Users/macbook/Desktop/kine_app/permissions/drf_permissions.py)
-
-Contains:
-
-- **`HasPermission`** — A DRF `BasePermission` subclass that:
-  1. Reads `view.permission_map` (a dict mapping action names to permission codes)
-  2. Gets the current action from `view.action`
-  3. Looks up the required permission code
-  4. Calls `user_has_permission(request.user, code)`
-  5. Returns `True` (allowed) or `False` (denied)
-  6. If an action is not in the map → **deny by default**
-  7. Admin users always pass (handled inside `user_has_permission`)
-
-- **[IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21)** — Consolidated version (moved here from the 3 duplicate locations)
-
----
-
-### Component 3 — Apply to All ViewSets
-
-Each ViewSet gets:
-1. `permission_classes = [IsAuthenticated, HasPermission]`
-2. A `permission_map` dict attribute
-
-#### [MODIFY] [clients/views.py](file:///Users/macbook/Desktop/kine_app/clients/views.py)
-
-```python
-# ClientViewSet
-permission_map = {
-    "list": "client:view",
-    "retrieve": "client:view",
-    "create": "client:create",
-    "update": "client:update",
-    "partial_update": "client:update",
-    "deactivate": "client:update",
-}
-
-# TreatmentViewSet
-permission_map = {
-    "list": "treatment:view",
-    "retrieve": "treatment:view",
-    "create": "treatment:create",
-    "update": "treatment:update",
-    "partial_update": "treatment:update",
-    "deactivate": "treatment:update",
-    "balance": "treatment:view",
-}
-```
-
----
-
-#### [MODIFY] [client_sessions/views.py](file:///Users/macbook/Desktop/kine_app/client_sessions/views.py)
-
-```python
-permission_map = {
-    "list": "session:view",
-    "retrieve": "session:view",
-    "create": "session:create",
-    "update": "session:update",
-    "partial_update": "session:update",
-    "mark_completed": "session:update",
-}
-```
-
----
+### Component 1 — Standardize Payments (fix the inconsistency)
 
 #### [MODIFY] [payments/views.py](file:///Users/macbook/Desktop/kine_app/payments/views.py)
 
-```python
-permission_map = {
-    "list": "payment:view",
-    "retrieve": "payment:view",
-    "create": "payment:create",
-    "update": "payment:update",
-    "partial_update": "payment:update",
-    "destroy": "payment:update",
-}
+Change [destroy()](file:///Users/macbook/Desktop/kine_app/users/views.py#25-30) from soft-delete to 405, add a [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38) action:
+
+```diff
+  def destroy(self, request, *args, **kwargs):
+-     """Soft delete: set is_active = False instead of hard delete."""
+-     payment = self.get_object()
+-     payment.is_active = False
+-     payment.save()
+-     return Response(
+-         {"detail": "Payment deactivated successfully."},
+-         status=status.HTTP_200_OK,
+-     )
++     return Response(
++         {"detail": "Hard delete is disabled. Use deactivate instead."},
++         status=status.HTTP_405_METHOD_NOT_ALLOWED,
++     )
++
++ @action(detail=True, methods=["patch"])
++ def deactivate(self, request, pk=None):
++     payment = self.get_object()
++     payment.is_active = False
++     payment.save()
++     return Response({"detail": "Payment deactivated successfully."})
+```
+
+Update `permission_map`:
+```diff
+- "destroy": "payment:update",
++ "deactivate": "payment:update",
 ```
 
 ---
 
-#### [MODIFY] [invoices/views.py](file:///Users/macbook/Desktop/kine_app/invoices/views.py)
-
-```python
-permission_map = {
-    "list": "invoice:view",
-    "retrieve": "invoice:view",
-    "create": "invoice:create",
-    "update": "invoice:update",
-    "partial_update": "invoice:update",
-}
-```
-
----
+### Component 2 — Standardize Settings (block hard delete, add deactivate)
 
 #### [MODIFY] [app_settings/views.py](file:///Users/macbook/Desktop/kine_app/app_settings/views.py)
 
-- Remove local [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21) class
-- Import `HasPermission` from `permissions.drf_permissions`
-- Apply `permission_map` to all 4 ViewSets + dashboard:
+For all 4 settings ViewSets, override [destroy()](file:///Users/macbook/Desktop/kine_app/users/views.py#25-30) to block hard delete and add [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38):
 
 ```python
-# All settings ViewSets
-permission_map = {
-    "list": "settings:view",
-    "retrieve": "settings:view",
-    "create": "settings:update",
-    "update": "settings:update",
-    "partial_update": "settings:update",
-    "destroy": "settings:update",
-}
+def destroy(self, request, *args, **kwargs):
+    return Response(
+        {"detail": "Hard delete is disabled. Use deactivate instead."},
+        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    )
 
-# SettingsDashboardAPIView — use IsAdminProfile or a custom check
+@action(detail=True, methods=["patch"])
+def deactivate(self, request, pk=None):
+    obj = self.get_object()
+    obj.is_active = False
+    obj.save()
+    return Response({"detail": "Deactivated successfully."})
+```
+
+Update `SETTINGS_PERMISSION_MAP`:
+```diff
+- "destroy": "settings:update",
++ "deactivate": "settings:update",
 ```
 
 ---
 
-#### [MODIFY] [users/views.py](file:///Users/macbook/Desktop/kine_app/users/views.py)
+### Component 3 — Cascade Deactivation Logic
 
-- Remove local [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21)
-- Import [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21) from `permissions.drf_permissions`
-- Users management stays admin-only (not permission-map based), so it keeps using [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21)
+> [!IMPORTANT]
+> When a parent record is deactivated, related child records should also be deactivated to maintain data consistency.
 
----
+#### [MODIFY] [clients/views.py](file:///Users/macbook/Desktop/kine_app/clients/views.py) — ClientViewSet.deactivate
 
-#### [MODIFY] [permissions/views.py](file:///Users/macbook/Desktop/kine_app/permissions/views.py)
+When deactivating a client, also deactivate all their active treatments:
 
-- Remove local [IsAdminProfile](file:///Users/macbook/Desktop/kine_app/users/views.py#13-21)
-- Import from `permissions.drf_permissions`
-
----
-
-### Component 4 — Frontend Support Endpoint
-
-The existing `GET /api/permissions/me/` already returns the right data:
-
-```json
-{
-  "role": "staff",
-  "permissions": ["client:view", "treatment:create", ...]
-}
+```python
+@action(detail=True, methods=["patch"])
+def deactivate(self, request, pk=None):
+    client = self.get_object()
+    client.is_active = False
+    client.save()
+    # Cascade: deactivate all active treatments
+    client.treatments.filter(is_active=True).update(is_active=False)
+    return Response({"detail": "Client and related treatments deactivated successfully."})
 ```
 
-> [!NOTE]
-> No changes needed to this endpoint — it already works correctly via [my_permissions_view](file:///Users/macbook/Desktop/kine_app/permissions/views.py#27-45) in [permissions/views.py](file:///Users/macbook/Desktop/kine_app/permissions/views.py). The task description mentions `/api/auth/me/permissions/` but the existing endpoint at `/api/permissions/me/` serves the same purpose. We'll keep the existing URL.
+#### [MODIFY] [clients/views.py](file:///Users/macbook/Desktop/kine_app/clients/views.py) — TreatmentViewSet.deactivate
+
+When deactivating a treatment, also deactivate all related active payments:
+
+```python
+@action(detail=True, methods=["patch"])
+def deactivate(self, request, pk=None):
+    treatment = self.get_object()
+    treatment.is_active = False
+    treatment.save()
+    # Cascade: deactivate related active payments
+    treatment.payments.filter(is_active=True).update(is_active=False)
+    return Response({"detail": "Treatment and related payments deactivated successfully."})
+```
 
 ---
 
-## Permission Matrix Summary
+### No Changes Needed
 
-| Module | list/retrieve | create | update/partial_update | custom actions |
-|--------|--------------|--------|----------------------|---------------|
-| Clients | `client:view` | `client:create` | `client:update` | deactivate → `client:update` |
-| Treatments | `treatment:view` | `treatment:create` | `treatment:update` | deactivate/balance → same |
-| Sessions | `session:view` | `session:create` | `session:update` | mark_completed → `session:update` |
-| Payments | `payment:view` | `payment:create` | `payment:update` | destroy → `payment:update` |
-| Invoices | `invoice:view` | `invoice:create` | `invoice:update` | — |
-| Settings | `settings:view` | `settings:update` | `settings:update` | — |
-| Users | admin-only | admin-only | admin-only | admin-only |
+| Module | Reason |
+|--------|--------|
+| **Invoices** | ✅ Immutable — 405 is correct, no deactivate needed |
+| **Sessions** | ✅ Status-managed — lifecycle via [status](file:///Users/macbook/Desktop/kine_app/clients/serializers.py#46-50) field, no deactivate needed |
+| **Users** | ✅ Already correct — 405 + deactivate |
+
+---
+
+## Final Standardized Matrix
+
+| Module | `DELETE` | [deactivate](file:///Users/macbook/Desktop/kine_app/users/views.py#30-38) | Cascade |
+|--------|---------|-------------|---------|
+| Clients | 405 | ✅ sets `is_active=False` | → deactivates treatments |
+| Treatments | 405 | ✅ sets `is_active=False` | → deactivates payments |
+| Payments | 405 *(changed)* | ✅ *(new)* | — |
+| Users | 405 | ✅ already exists | — |
+| Sessions | 405 | ❌ not applicable | — |
+| Invoices | 405 | ❌ not applicable | — |
+| Settings | 405 *(changed)* | ✅ *(new)* | — |
 
 ---
 
 ## Verification Plan
 
-### Automated Tests
-
-1. **`manage.py check`** — Ensure no Django errors after changes
-2. **Shell smoke test** — Script that:
-   - Creates an admin user and a staff user
-   - Assigns `client:view` to staff
-   - Calls `user_has_permission()` for both
-   - Asserts admin passes all, staff passes `client:view` only
-3. **API test via Django test client** — Scripts that:
-   - Admin user → `GET /api/clients/` → 200
-   - Staff with `client:view` → `GET /api/clients/` → 200
-   - Staff without `client:view` → `GET /api/clients/` → 403
-   - Staff with `client:view` → `POST /api/clients/` → 403 (missing `client:create`)
+1. **`manage.py check`** — No Django errors
+2. **Payments**: `DELETE /api/payments/1/` → 405 (was 200). `PATCH /api/payments/1/deactivate/` → 200
+3. **Settings**: `DELETE /api/settings/options/1/` → 405 (was allowed). `PATCH /api/settings/options/1/deactivate/` → 200
+4. **Cascade**: Deactivate a client → verify its treatments are also deactivated
+5. **Cascade**: Deactivate a treatment → verify its payments are also deactivated

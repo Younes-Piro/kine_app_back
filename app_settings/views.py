@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,10 +18,27 @@ SETTINGS_PERMISSION_MAP = {
    "create": "settings:update",
    "update": "settings:update",
    "partial_update": "settings:update",
-   "destroy": "settings:update",
+   "destroy": "settings:delete",
+   "deactivate": "settings:delete",
 }
 
-class AppOptionViewSet(viewsets.ModelViewSet):
+
+class SettingsDeactivateMixin:
+   def destroy(self, request, *args, **kwargs):
+       return Response(
+           {"detail": "Hard delete is disabled. Use deactivate instead."},
+           status=status.HTTP_405_METHOD_NOT_ALLOWED,
+       )
+
+   @action(detail=True, methods=["patch"])
+   def deactivate(self, request, pk=None):
+       obj = self.get_object()
+       obj.is_active = False
+       obj.save()
+       return Response({"detail": "Deactivated successfully."})
+
+
+class AppOptionViewSet(SettingsDeactivateMixin, viewsets.ModelViewSet):
    queryset = AppOption.objects.all().order_by("category", "sort_order", "label")
    serializer_class = AppOptionSerializer
    permission_classes = [IsAuthenticated, HasPermission]
@@ -32,19 +50,19 @@ class AppOptionViewSet(viewsets.ModelViewSet):
            queryset = queryset.filter(category=category)
        return queryset
 
-class HolidayViewSet(viewsets.ModelViewSet):
+class HolidayViewSet(SettingsDeactivateMixin, viewsets.ModelViewSet):
    queryset = Holiday.objects.all().order_by("date")
    serializer_class = HolidaySerializer
    permission_classes = [IsAuthenticated, HasPermission]
    permission_map = SETTINGS_PERMISSION_MAP
 
-class ClinicClosedDayViewSet(viewsets.ModelViewSet):
+class ClinicClosedDayViewSet(SettingsDeactivateMixin, viewsets.ModelViewSet):
    queryset = ClinicClosedDay.objects.all().order_by("weekday")
    serializer_class = ClinicClosedDaySerializer
    permission_classes = [IsAuthenticated, HasPermission]
    permission_map = SETTINGS_PERMISSION_MAP
 
-class ClinicClosureRangeViewSet(viewsets.ModelViewSet):
+class ClinicClosureRangeViewSet(SettingsDeactivateMixin, viewsets.ModelViewSet):
    queryset = ClinicClosureRange.objects.all().order_by("start_date")
    serializer_class = ClinicClosureRangeSerializer
    permission_classes = [IsAuthenticated, HasPermission]

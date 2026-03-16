@@ -24,6 +24,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         "create": "invoice:create",
         "update": "invoice:update",
         "partial_update": "invoice:update",
+        "destroy": "invoice:delete",
     }
 
     def get_queryset(self):

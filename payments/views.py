@@ -1,4 +1,5 @@
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,7 +22,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
         "create": "payment:create",
         "update": "payment:update",
         "partial_update": "payment:update",
-        "destroy": "payment:update",
+        "destroy": "payment:delete",
+        "deactivate": "payment:delete",
     }
 
     def get_queryset(self):
@@ -59,11 +61,14 @@ class PaymentViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def destroy(self, request, *args, **kwargs):
-        """Soft delete: set is_active = False instead of hard delete."""
+        return Response(
+            {"detail": "Hard delete is disabled. Use deactivate instead."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
+
+    @action(detail=True, methods=["patch"])
+    def deactivate(self, request, pk=None):
         payment = self.get_object()
         payment.is_active = False
         payment.save()
-        return Response(
-            {"detail": "Payment deactivated successfully."},
-            status=status.HTTP_200_OK,
-        )
+        return Response({"detail": "Payment deactivated successfully."})
