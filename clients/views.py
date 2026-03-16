@@ -6,6 +6,7 @@ from django.db.models import DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from permissions.drf_permissions import HasPermission
 from .models import Client, Treatment
+from .services import deactivate_client_with_cascade, deactivate_treatment_with_cascade
 from .serializers import (
     ClientSerializer, 
     TreatmentSerializer,
@@ -39,11 +40,9 @@ class ClientViewSet(viewsets.ModelViewSet):
    @action(detail=True, methods=["patch"])
    def deactivate(self, request, pk=None):
        client = self.get_object()
-       client.is_active = False
-       client.save()
-       client.treatments.filter(is_active=True).update(is_active=False)
+       deactivate_client_with_cascade(client)
        return Response(
-           {"detail": "Client and related treatments deactivated successfully."}
+           {"detail": "Client and all related records deactivated successfully."}
        )
 
 class TreatmentViewSet(viewsets.ModelViewSet):
@@ -92,11 +91,9 @@ class TreatmentViewSet(viewsets.ModelViewSet):
    @action(detail=True, methods=["patch"])
    def deactivate(self, request, pk=None):
        treatment = self.get_object()
-       treatment.is_active = False
-       treatment.save()
-       treatment.payments.filter(is_active=True).update(is_active=False)
+       deactivate_treatment_with_cascade(treatment)
        return Response(
-           {"detail": "Treatment and related payments deactivated successfully."}
+           {"detail": "Treatment, scheduled sessions, and payments deactivated successfully."}
        )
 
    @action(detail=True, methods=["get"])
