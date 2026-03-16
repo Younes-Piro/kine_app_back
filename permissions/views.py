@@ -1,21 +1,12 @@
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from users.models import Profile
+from permissions.drf_permissions import IsAdminProfile
 from .models import Permission, ProfilePermission
 from .serializers import PermissionSerializer, AssignPermissionsSerializer
-
-class IsAdminProfile(BasePermission):
-   def has_permission(self, request, view):
-       return (
-           request.user
-           and request.user.is_authenticated
-           and hasattr(request.user, "profile")
-           and request.user.profile.role == "admin"
-       )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsAdminProfile])

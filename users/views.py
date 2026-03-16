@@ -1,23 +1,15 @@
 from django.contrib.auth.models import User
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import BasePermission, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from permissions.drf_permissions import IsAdminProfile
 from .serializers import (
    UserCreateSerializer,
    UserDetailSerializer,
    UserListSerializer,
    UserUpdateSerializer,
 )
-
-class IsAdminProfile(BasePermission):
-   def has_permission(self, request, view):
-       return (
-           request.user
-           and request.user.is_authenticated
-           and hasattr(request.user, "profile")
-           and request.user.profile.role == "admin"
-       )
 
 class UserViewSet(viewsets.ModelViewSet):
    queryset = User.objects.select_related("profile").all().order_by("id")

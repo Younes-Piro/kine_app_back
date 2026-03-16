@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from app_settings.models import AppOption
+from permissions.drf_permissions import HasPermission
 from .models import Session
 from .serializers import SessionSerializer
 
@@ -13,7 +14,15 @@ class SessionViewSet(viewsets.ModelViewSet):
        "status",
    ).all()
    serializer_class = SessionSerializer
-   permission_classes = [IsAuthenticated]
+   permission_classes = [IsAuthenticated, HasPermission]
+   permission_map = {
+       "list": "session:view",
+       "retrieve": "session:view",
+       "create": "session:create",
+       "update": "session:update",
+       "partial_update": "session:update",
+       "mark_completed": "session:update",
+   }
    def get_queryset(self):
        queryset = super().get_queryset()
        client_id = self.request.query_params.get("client_id")

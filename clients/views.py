@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from permissions.drf_permissions import HasPermission
 from .models import Client, Treatment
 from .serializers import (
     ClientSerializer, 
@@ -20,7 +21,15 @@ class ClientViewSet(viewsets.ModelViewSet):
        "dossier_type",
    ).all()
    serializer_class = ClientSerializer
-   permission_classes = [IsAuthenticated]
+   permission_classes = [IsAuthenticated, HasPermission]
+   permission_map = {
+       "list": "client:view",
+       "retrieve": "client:view",
+       "create": "client:create",
+       "update": "client:update",
+       "partial_update": "client:update",
+       "deactivate": "client:update",
+   }
    def destroy(self, request, *args, **kwargs):
        return Response(
            {"detail": "Hard delete is disabled. Use deactivate instead."},
@@ -48,7 +57,16 @@ class TreatmentViewSet(viewsets.ModelViewSet):
        "sessions__status",
        "sessions__payment_status",
    ).all()
-   permission_classes = [IsAuthenticated]
+   permission_classes = [IsAuthenticated, HasPermission]
+   permission_map = {
+       "list": "treatment:view",
+       "retrieve": "treatment:view",
+       "create": "treatment:create",
+       "update": "treatment:update",
+       "partial_update": "treatment:update",
+       "deactivate": "treatment:update",
+       "balance": "treatment:view",
+   }
    def get_queryset(self):
        queryset = super().get_queryset()
        client_id = self.request.query_params.get("client_id")

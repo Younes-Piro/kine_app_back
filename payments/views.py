@@ -2,6 +2,7 @@ from rest_framework import status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from permissions.drf_permissions import HasPermission
 from .models import Payment
 from .serializers import PaymentSerializer
 
@@ -13,7 +14,15 @@ class PaymentViewSet(viewsets.ModelViewSet):
         "payment_method",
     ).all()
     serializer_class = PaymentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasPermission]
+    permission_map = {
+        "list": "payment:view",
+        "retrieve": "payment:view",
+        "create": "payment:create",
+        "update": "payment:update",
+        "partial_update": "payment:update",
+        "destroy": "payment:update",
+    }
 
     def get_queryset(self):
         queryset = super().get_queryset()
