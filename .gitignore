@@ -53,4 +53,5 @@ pip-wheel-metadata/
 # OS files
 .DS_Store
 Thumbs.db
-/implementation_plan.md
+implementation_plan.md
+.claude
