@@ -58,7 +58,7 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div>
+      <div className="sidebar-content">
         <div className="sidebar-brand">
           <h2>KineApp</h2>
           <p>Clinic Manager</p>

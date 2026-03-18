@@ -11,7 +11,7 @@ import { useAuthStore } from '@/store/authStore';
 import { usePermissionsStore } from '@/store/permissionsStore';
 import type { LoginRequest, LoginResponse } from '@/types/api';
 
-export function useLogin(redirectTo = '/') {
+export function useLogin() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const setPermissions = usePermissionsStore((state) => state.setFromResponse);
@@ -30,7 +30,7 @@ export function useLogin(redirectTo = '/') {
         // Keep auth data even if permission bootstrap fails.
       }
 
-      navigate(redirectTo, { replace: true });
+      navigate('/', { replace: true });
       toast.success('Logged in successfully');
     },
     onError: (error: unknown) => {

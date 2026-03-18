@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/Button';
@@ -18,14 +17,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
-  const [searchParams] = useSearchParams();
-  const redirectTo = useMemo(() => {
-    const redirect = searchParams.get('redirect');
-    const candidate = redirect ? decodeURIComponent(redirect) : '/';
-    return candidate.startsWith('/') ? candidate : '/';
-  }, [searchParams]);
   const accessToken = useAuthStore((state) => state.accessToken);
-  const loginMutation = useLogin(redirectTo);
+  const loginMutation = useLogin();
 
   const {
     register,
@@ -40,7 +33,7 @@ export function LoginPage() {
   });
 
   if (accessToken) {
-    return <Navigate to={redirectTo} replace />;
+    return <Navigate to="/" replace />;
   }
 
   const onSubmit = (values: LoginFormValues) => {
