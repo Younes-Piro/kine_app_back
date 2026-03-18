@@ -1,0 +1,19 @@
+import { Outlet } from 'react-router-dom';
+
+import { Header } from '@/components/layout/Header';
+import { PageWrapper } from '@/components/layout/PageWrapper';
+import { Sidebar } from '@/components/layout/Sidebar';
+
+export function AppLayout() {
+  return (
+    <div className="app-shell">
+      <Sidebar />
+      <div className="app-main">
+        <Header />
+        <PageWrapper>
+          <Outlet />
+        </PageWrapper>
+      </div>
+    </div>
+  );
+}
