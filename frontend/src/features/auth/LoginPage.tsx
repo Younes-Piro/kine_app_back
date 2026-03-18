@@ -5,7 +5,6 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/Button';
-import { CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useLogin } from '@/hooks/useAuth';
 import { showFormValidationToast } from '@/lib/formValidation';
@@ -49,25 +48,27 @@ export function LoginPage() {
   };
 
   return (
-    <>
-      <CardHeader>
-        <CardTitle>Sign in to KineApp</CardTitle>
-        <p>Use your backend user credentials.</p>
-      </CardHeader>
-      <CardBody>
-        <form className="stack" onSubmit={handleSubmit(onSubmit, showFormValidationToast)}>
-          <Input label="Username" {...register('username')} error={errors.username?.message} />
-          <Input
-            label="Password"
-            type="password"
-            {...register('password')}
-            error={errors.password?.message}
-          />
-          <Button type="submit" isLoading={loginMutation.isPending}>
-            Login
+    <div className="auth-form-content">
+      <div className="auth-form-header">
+        <h2>Welcome back</h2>
+        <p>Please enter your credentials to access your account.</p>
+      </div>
+      
+      <form className="stack" onSubmit={handleSubmit(onSubmit, showFormValidationToast)}>
+        <Input label="Username" {...register('username')} error={errors.username?.message} />
+        <Input
+          label="Password"
+          type="password"
+          {...register('password')}
+          error={errors.password?.message}
+        />
+        
+        <div className="auth-form-actions">
+          <Button type="submit" isLoading={loginMutation.isPending} size="lg" className="full-width">
+            Sign In
           </Button>
-        </form>
-      </CardBody>
-    </>
+        </div>
+      </form>
+    </div>
   );
 }
