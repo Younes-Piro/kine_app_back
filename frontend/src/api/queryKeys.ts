@@ -21,7 +21,9 @@ export const queryKeys = {
   },
   sessions: {
     all: ['sessions'] as const,
+    byClient: (id: number) => ['sessions', { client_id: id }] as const,
     byTreatment: (id: number) => ['sessions', { treatment_id: id }] as const,
+    detail: (id: number) => ['sessions', id] as const,
   },
   payments: {
     all: ['payments'] as const,

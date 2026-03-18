@@ -327,6 +327,12 @@ select:focus {
   justify-content: flex-end;
 }
 
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
 .toolbar {
   justify-content: space-between;
 }
@@ -633,6 +639,100 @@ select:focus {
   color: var(--color-neutral-600);
 }
 
+.session-calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.session-calendar-wrap {
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 0.8rem;
+  padding: 0.8rem;
+  background: #fff;
+}
+
+.calendar-legend {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--color-neutral-600);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.3rem;
+}
+
+.dot-info {
+  background: var(--color-info);
+}
+
+.dot-success {
+  background: var(--color-success);
+}
+
+.dot-danger {
+  background: var(--color-danger);
+}
+
+.calendar-session-card {
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 0.7rem;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.5rem;
+  background: #fff;
+}
+
+.calendar-session-meta {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.calendar-session-meta strong {
+  font-size: 0.9rem;
+}
+
+.calendar-session-meta span {
+  color: var(--color-neutral-600);
+  font-size: 0.8rem;
+}
+
+.calendar-dot-scheduled .rdp-day_button::after,
+.calendar-dot-completed .rdp-day_button::after,
+.calendar-dot-cancelled .rdp-day_button::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+}
+
+.calendar-dot-scheduled .rdp-day_button::after {
+  background: var(--color-info);
+}
+
+.calendar-dot-completed .rdp-day_button::after {
+  background: var(--color-success);
+}
+
+.calendar-dot-cancelled .rdp-day_button::after {
+  background: var(--color-danger);
+}
+
+.rdp-day_button {
+  position: relative;
+}
+
 @media (max-width: 1024px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -649,7 +749,9 @@ select:focus {
   .grid-2,
   .client-info-grid,
   .detail-grid,
-  .metrics-grid {
+  .metrics-grid,
+  .filters-grid,
+  .session-calendar-layout {
     grid-template-columns: 1fr;
   }
 }

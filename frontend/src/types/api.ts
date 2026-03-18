@@ -202,7 +202,7 @@ export interface TreatmentBalanceResponse {
   }>;
 }
 
-export interface SessionItem {
+export interface Session {
   id: number;
   treatment: number;
   client: number;
@@ -217,6 +217,22 @@ export interface SessionItem {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export type SessionItem = Session;
+
+export interface SessionCreateRequest {
+  treatment: number;
+  session_date: string;
+  status?: number;
+  notes?: string;
+}
+
+export interface SessionUpdateRequest {
+  treatment?: number;
+  session_date?: string;
+  status?: number;
+  notes?: string;
 }
 
 export interface Payment {

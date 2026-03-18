@@ -1,5 +1,10 @@
 import { client } from '@/api/client';
-import type { SessionItem } from '@/types/api';
+import type {
+  Session,
+  SessionCreateRequest,
+  SessionItem,
+  SessionUpdateRequest,
+} from '@/types/api';
 
 interface SessionListParams {
   clientId?: number;
@@ -17,8 +22,26 @@ export const sessionsApi = {
     return data;
   },
 
+  async detail(id: number) {
+    const { data } = await client.get<Session>(`/api/sessions/${id}/`);
+    return data;
+  },
+
+  async create(payload: SessionCreateRequest) {
+    const { data } = await client.post<Session>('/api/sessions/', payload);
+    return data;
+  },
+
+  async update(id: number, payload: SessionUpdateRequest) {
+    const { data } = await client.patch<Session>(`/api/sessions/${id}/`, payload);
+    return data;
+  },
+
   async markCompleted(id: number) {
-    const { data } = await client.patch<SessionItem>(`/api/sessions/${id}/mark_completed/`, {});
+    const { data } = await client.patch<SessionItem>(
+      `/api/sessions/${id}/mark_completed/`,
+      {},
+    );
     return data;
   },
 };
