@@ -3,6 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from activity_log.models import ActivityLog
+from activity_log.services import log_activity
 
 from permissions.drf_permissions import IsAdminProfile
 from .models import Permission, ProfilePermission
@@ -74,6 +76,15 @@ def user_permissions_view(request, user_id):
        updated_permissions = Permission.objects.filter(
            permission_profiles__profile=profile
        ).order_by("id")
+       log_activity(
+           request.user,
+           ActivityLog.ACTION_OTHER,
+           "UserPermission",
+           user.id,
+           description=(
+               f"Assigned {len(permission_ids)} permissions to User #{user.id} ({user.username})."
+           ),
+       )
        return Response({
            "detail": "Permissions assigned successfully.",
            "user_id": user.id,
@@ -86,4 +97,11 @@ def user_permissions_view(request, user_id):
                status=status.HTTP_400_BAD_REQUEST
            )
        ProfilePermission.objects.filter(profile=profile).delete()
+       log_activity(
+           request.user,
+           ActivityLog.ACTION_OTHER,
+           "UserPermission",
+           user.id,
+           description=f"Cleared all assigned permissions for User #{user.id} ({user.username}).",
+       )
        return Response({"detail": "Permissions cleared successfully."})

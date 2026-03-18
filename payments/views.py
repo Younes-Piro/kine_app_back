@@ -3,18 +3,20 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from activity_log.mixins import LoggingMixin
 from permissions.drf_permissions import HasPermission
 from .models import Payment
 from .serializers import PaymentSerializer
 
 
-class PaymentViewSet(viewsets.ModelViewSet):
+class PaymentViewSet(LoggingMixin, viewsets.ModelViewSet):
     queryset = Payment.objects.select_related(
         "treatment",
         "treatment__client",
         "payment_method",
     ).all()
     serializer_class = PaymentSerializer
+    log_model_name = "Payment"
     permission_classes = [IsAuthenticated, HasPermission]
     permission_map = {
         "list": "payment:view",
@@ -49,7 +51,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
         treatment = serializer.validated_data["treatment"]
         amount = serializer.validated_data["amount"]
         self._validate_payment_ceiling(treatment=treatment, amount=amount)
-        serializer.save()
+        payment = serializer.save()
+        self.log_create_action(payment)
 
     def perform_update(self, serializer):
         treatment = serializer.validated_data.get("treatment", serializer.instance.treatment)
@@ -58,7 +61,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
             treatment=treatment,
             amount=amount,
         )
-        serializer.save()
+        payment = serializer.save()
+        self.log_update_action(payment)
 
     def destroy(self, request, *args, **kwargs):
         return Response(
@@ -70,5 +74,6 @@ class PaymentViewSet(viewsets.ModelViewSet):
     def deactivate(self, request, pk=None):
         payment = self.get_object()
         payment.is_active = False
-        payment.save()
+        payment.save(update_fields=["is_active", "updated_at"])
+        self.log_deactivate_action(payment)
         return Response({"detail": "Payment deactivated successfully."})

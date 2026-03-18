@@ -376,3 +376,14 @@ export interface InvoiceCreateRequest {
   unit_price: string;
   notes?: string;
 }
+
+export interface ActivityLog {
+  id: number;
+  user: number | null;
+  username: string;
+  action: string;
+  model_name: string;
+  object_id: number | null;
+  description: string;
+  created_at: string;
+}

@@ -35,6 +35,11 @@ export const queryKeys = {
     byType: (id: number) => ['invoices', { invoice_type: id }] as const,
     detail: (id: number) => ['invoices', id] as const,
   },
+  activityLog: {
+    all: ['activity-log'] as const,
+    list: (filters: { user?: number; action?: string; model_name?: string; search?: string }) =>
+      ['activity-log', filters] as const,
+  },
   settings: {
     dashboard: ['settings'] as const,
     options: (category?: string) => ['settings', 'options', category] as const,

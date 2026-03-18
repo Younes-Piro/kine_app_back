@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ForbiddenPage } from '@/features/auth/ForbiddenPage';
+import { ActivityLogPage } from '@/features/activity-log/ActivityLogPage';
 import { ClientCreatePage } from '@/features/clients/ClientCreatePage';
 import { ClientDetailPage } from '@/features/clients/ClientDetailPage';
 import { ClientEditPage } from '@/features/clients/ClientEditPage';
@@ -173,6 +174,14 @@ export function AppRouter() {
             element={
               <AdminRoute>
                 <SettingsDashboardPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="activity-log"
+            element={
+              <AdminRoute>
+                <ActivityLogPage />
               </AdminRoute>
             }
           />

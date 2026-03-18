@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from activity_log.mixins import LoggingMixin
 from permissions.drf_permissions import HasPermission
 from .models import Client, Treatment
 from .services import deactivate_client_with_cascade, deactivate_treatment_with_cascade
@@ -14,7 +15,7 @@ from .serializers import (
     TreatmentListSerializer
 )
 
-class ClientViewSet(viewsets.ModelViewSet):
+class ClientViewSet(LoggingMixin, viewsets.ModelViewSet):
    queryset = Client.objects.select_related(
        "gender",
        "marital_status",
@@ -22,6 +23,7 @@ class ClientViewSet(viewsets.ModelViewSet):
        "dossier_type",
    ).all()
    serializer_class = ClientSerializer
+   log_model_name = "Client"
    permission_classes = [IsAuthenticated, HasPermission]
    permission_map = {
        "list": "client:view",
@@ -41,11 +43,15 @@ class ClientViewSet(viewsets.ModelViewSet):
    def deactivate(self, request, pk=None):
        client = self.get_object()
        deactivate_client_with_cascade(client)
+       self.log_deactivate_action(
+           client,
+           description=f"Deactivated Client #{client.pk} with related treatments, sessions, and payments.",
+       )
        return Response(
            {"detail": "Client and all related records deactivated successfully."}
        )
 
-class TreatmentViewSet(viewsets.ModelViewSet):
+class TreatmentViewSet(LoggingMixin, viewsets.ModelViewSet):
    queryset = Treatment.objects.select_related(
        "client",
        "session_rhythm",
@@ -60,6 +66,7 @@ class TreatmentViewSet(viewsets.ModelViewSet):
        "sessions__status",
        "sessions__payment_status",
    ).all()
+   log_model_name = "Treatment"
    permission_classes = [IsAuthenticated, HasPermission]
    permission_map = {
        "list": "treatment:view",
@@ -92,6 +99,10 @@ class TreatmentViewSet(viewsets.ModelViewSet):
    def deactivate(self, request, pk=None):
        treatment = self.get_object()
        deactivate_treatment_with_cascade(treatment)
+       self.log_deactivate_action(
+           treatment,
+           description=f"Deactivated Treatment #{treatment.pk} with scheduled sessions and payments.",
+       )
        return Response(
            {"detail": "Treatment, scheduled sessions, and payments deactivated successfully."}
        )
@@ -119,6 +130,11 @@ class TreatmentViewSet(viewsets.ModelViewSet):
            }
            for s in sessions
        ]
+       self.log_other_action(
+           "Treatment",
+           treatment.pk,
+           description=f"Viewed balance for Treatment #{treatment.pk}.",
+       )
        return Response({
            "treatment_id": treatment.id,
            "session_price": str(treatment.session_price),

@@ -1,6 +1,7 @@
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from activity_log.mixins import LoggingMixin
 from permissions.drf_permissions import HasPermission
 
 from .models import Invoice
@@ -11,12 +12,13 @@ from .serializers import (
 )
 
 
-class InvoiceViewSet(viewsets.ModelViewSet):
+class InvoiceViewSet(LoggingMixin, viewsets.ModelViewSet):
     queryset = Invoice.objects.select_related(
         "client",
         "invoice_type",
         "session_rhythm",
     ).all()
+    log_model_name = "Invoice"
     permission_classes = [IsAuthenticated, HasPermission]
     permission_map = {
         "list": "invoice:view",

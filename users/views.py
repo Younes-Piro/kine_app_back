@@ -3,6 +3,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from activity_log.mixins import LoggingMixin
 from permissions.drf_permissions import IsAdminProfile
 from .serializers import (
    UserCreateSerializer,
@@ -11,8 +12,9 @@ from .serializers import (
    UserUpdateSerializer,
 )
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(LoggingMixin, viewsets.ModelViewSet):
    queryset = User.objects.select_related("profile").all().order_by("id")
+   log_model_name = "User"
    permission_classes = [IsAuthenticated, IsAdminProfile]
    def get_serializer_class(self):
        if self.action == "list":
@@ -31,7 +33,11 @@ class UserViewSet(viewsets.ModelViewSet):
    def deactivate(self, request, pk=None):
        user = self.get_object()
        user.is_active = False
-       user.save()
+       user.save(update_fields=["is_active"])
        user.profile.is_active = False
-       user.profile.save()
+       user.profile.save(update_fields=["is_active"])
+       self.log_deactivate_action(
+           user,
+           description=f"Deactivated User #{user.pk} and linked profile.",
+       )
        return Response({"detail": "User deactivated successfully."})

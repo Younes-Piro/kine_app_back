@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "app_settings",
     "payments.apps.PaymentsConfig",
     "invoices.apps.InvoicesConfig",
+    "activity_log.apps.ActivityLogConfig",
 ]
 
 MIDDLEWARE = [

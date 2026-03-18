@@ -3,17 +3,19 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from app_settings.models import AppOption
+from activity_log.mixins import LoggingMixin
 from permissions.drf_permissions import HasPermission
 from .models import Session
 from .serializers import SessionSerializer
 
-class SessionViewSet(viewsets.ModelViewSet):
+class SessionViewSet(LoggingMixin, viewsets.ModelViewSet):
    queryset = Session.objects.select_related(
        "treatment",
        "treatment__client",
        "status",
    ).all()
    serializer_class = SessionSerializer
+   log_model_name = "Session"
    permission_classes = [IsAuthenticated, HasPermission]
    permission_map = {
        "list": "session:view",
@@ -52,5 +54,10 @@ class SessionViewSet(viewsets.ModelViewSet):
                status=status.HTTP_400_BAD_REQUEST,
            )
        session.status = completed_status
-       session.save()
+       session.save(update_fields=["status", "updated_at"])
+       self.log_other_action(
+           "Session",
+           session.pk,
+           description=f"Marked Session #{session.pk} as completed.",
+       )
        return Response(SessionSerializer(session).data)

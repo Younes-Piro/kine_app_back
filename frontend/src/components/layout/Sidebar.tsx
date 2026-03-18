@@ -1,4 +1,15 @@
-import { Home, Users, UserRound, Wallet, FileText, CalendarDays, Stethoscope, Settings, LogOut } from 'lucide-react';
+import {
+  Home,
+  Users,
+  UserRound,
+  Wallet,
+  FileText,
+  CalendarDays,
+  Stethoscope,
+  Settings,
+  Clock3,
+  LogOut,
+} from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { Button } from '@/components/ui/Button';
@@ -22,6 +33,7 @@ const navItems: NavigationItem[] = [
   { label: 'Payments', to: '/payments', icon: Wallet, permission: 'payment:view' },
   { label: 'Invoices', to: '/invoices', icon: FileText, permission: 'invoice:view' },
   { label: 'Users', to: '/users', icon: Users, adminOnly: true },
+  { label: 'Activity Log', to: '/activity-log', icon: Clock3, adminOnly: true },
   { label: 'Settings', to: '/settings', icon: Settings, adminOnly: true },
 ];
 
