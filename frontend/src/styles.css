@@ -492,6 +492,18 @@ select:focus {
   color: var(--color-neutral-500);
 }
 
+.invoice-pdf-actions-col {
+  min-width: 310px;
+}
+
+.invoice-pdf-actions {
+  gap: 0.4rem;
+}
+
+.invoice-pdf-actions .btn {
+  white-space: nowrap;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

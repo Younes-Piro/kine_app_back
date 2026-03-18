@@ -32,6 +32,8 @@ export const queryKeys = {
   invoices: {
     all: ['invoices'] as const,
     byClient: (id: number) => ['invoices', { client_id: id }] as const,
+    byType: (id: number) => ['invoices', { invoice_type: id }] as const,
+    detail: (id: number) => ['invoices', id] as const,
   },
   settings: {
     options: (category?: string) => ['settings', 'options', category] as const,

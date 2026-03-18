@@ -10,6 +10,8 @@ import { ClientDetailPage } from '@/features/clients/ClientDetailPage';
 import { ClientEditPage } from '@/features/clients/ClientEditPage';
 import { ClientListPage } from '@/features/clients/ClientListPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { InvoiceCreatePage } from '@/features/invoices/InvoiceCreatePage';
+import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage';
 import { InvoiceListPage } from '@/features/invoices/InvoiceListPage';
 import { PaymentListPage } from '@/features/payments/PaymentListPage';
 import { SessionListPage } from '@/features/sessions/SessionListPage';
@@ -147,6 +149,22 @@ export function AppRouter() {
             element={
               <ProtectedRoute permission="invoice:view">
                 <InvoiceListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="invoices/new"
+            element={
+              <ProtectedRoute permission="invoice:create">
+                <InvoiceCreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="invoices/:id"
+            element={
+              <ProtectedRoute permission="invoice:view">
+                <InvoiceDetailPage />
               </ProtectedRoute>
             }
           />

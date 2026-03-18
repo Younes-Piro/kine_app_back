@@ -264,13 +264,43 @@ export interface InvoiceListItem {
   invoice_number: string;
   client: number;
   client_full_name: string;
-  invoice_type: number;
+  invoice_type: number | null;
   invoice_type_text: string;
   issue_date: string;
+  diagnosis?: string | null;
+  type_and_site?: string | null;
   start_date: string;
   end_date: string;
   number_of_sessions: number;
+  session_rhythm?: number | null;
+  session_rhythm_text?: string;
   unit_price: string;
   total_amount: string;
+  notes?: string | null;
+  pdf_file?: string | null;
   created_at: string;
+}
+
+export interface InvoiceDetail extends InvoiceListItem {
+  diagnosis: string | null;
+  type_and_site: string | null;
+  session_rhythm: number | null;
+  session_rhythm_text: string;
+  notes: string | null;
+  pdf_file: string | null;
+  updated_at: string;
+}
+
+export interface InvoiceCreateRequest {
+  client: number;
+  invoice_type: number;
+  issue_date?: string;
+  diagnosis?: string;
+  type_and_site?: string;
+  start_date: string;
+  end_date?: string;
+  number_of_sessions: number;
+  session_rhythm: number;
+  unit_price: string;
+  notes?: string;
 }

@@ -1,48 +1,27 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { paymentsApi } from '@/api/payments';
 import { queryKeys } from '@/api/queryKeys';
 import { sessionsApi } from '@/api/sessions';
 import { treatmentsApi } from '@/api/treatments';
-import { AppOptionSelect } from '@/components/shared/AppOptionSelect';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { Table, type TableColumn } from '@/components/ui/Table';
 import { usePermissions } from '@/hooks/usePermissions';
 import { formatDate, formatMoney } from '@/lib/formatters';
 import { getApiErrorMessage } from '@/lib/http';
 import type { Payment, TreatmentSession } from '@/types/api';
 
+import { PaymentCreateForm } from '../payments/PaymentCreateForm';
 import { BalanceTab } from './BalanceTab';
 import { TreatmentEditDialog } from './TreatmentEditDialog';
 
 type DetailTab = 'sessions' | 'payments' | 'balance';
-
-const paymentCreateSchema = z.object({
-  amount: z
-    .string()
-    .min(1, 'Amount is required')
-    .refine((value) => Number(value) > 0, 'Amount must be greater than 0'),
-  payment_date: z.string().min(1, 'Payment date is required'),
-  payment_method: z.number().optional(),
-  notes: z.string().optional(),
-});
-
-type PaymentCreateValues = z.infer<typeof paymentCreateSchema>;
-
-function optionalText(value?: string) {
-  const normalized = value?.trim();
-  return normalized ? normalized : undefined;
-}
 
 export function TreatmentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -74,21 +53,6 @@ export function TreatmentDetailPage() {
     enabled: Number.isFinite(treatmentId) && activeTab === 'payments' && canViewPayments,
   });
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm<PaymentCreateValues>({
-    resolver: zodResolver(paymentCreateSchema),
-    defaultValues: {
-      amount: '',
-      payment_date: '',
-      notes: '',
-    },
-  });
-
   const deactivateMutation = useMutation({
     mutationFn: () => treatmentsApi.deactivate(treatmentId),
     onSuccess: () => {
@@ -114,32 +78,6 @@ export function TreatmentDetailPage() {
     },
     onError: (error: unknown) => {
       toast.error(getApiErrorMessage(error, 'Failed to mark session as completed'));
-    },
-  });
-
-  const createPaymentMutation = useMutation({
-    mutationFn: (values: PaymentCreateValues) =>
-      paymentsApi.create({
-        treatment: treatmentId,
-        amount: values.amount,
-        payment_date: values.payment_date,
-        payment_method: values.payment_method,
-        notes: optionalText(values.notes),
-      }),
-    onSuccess: () => {
-      toast.success('Payment created');
-      queryClient.invalidateQueries({ queryKey: queryKeys.payments.byTreatment(treatmentId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.treatments.detail(treatmentId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.treatments.balance(treatmentId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.treatments.all });
-      const clientId = treatmentQuery.data?.client;
-      if (clientId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.treatments.byClient(clientId) });
-      }
-      reset({ amount: '', payment_date: '', payment_method: undefined, notes: '' });
-    },
-    onError: (error: unknown) => {
-      toast.error(getApiErrorMessage(error, 'Failed to create payment'));
     },
   });
 
@@ -317,52 +255,33 @@ export function TreatmentDetailPage() {
               {canViewPayments ? (
                 <>
                   {canCreatePayments ? (
-                    <form
-                      className="stack"
-                      onSubmit={handleSubmit((values) => createPaymentMutation.mutate(values))}
-                    >
-                      <div className="grid-2">
-                        <Input
-                          label="Amount"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          {...register('amount')}
-                          error={errors.amount?.message}
-                        />
-                        <Input
-                          label="Payment Date"
-                          type="date"
-                          {...register('payment_date')}
-                          error={errors.payment_date?.message}
-                        />
+                    <PaymentCreateForm
+                      treatmentId={treatment.id}
+                      maxRemainingAmount={treatment.total_remaining_amount}
+                      balanceAmount={treatment.balance}
+                      onCreated={() => {
+                        queryClient.invalidateQueries({
+                          queryKey: queryKeys.payments.byTreatment(treatment.id),
+                        });
+                        queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
+                        queryClient.invalidateQueries({
+                          queryKey: queryKeys.treatments.detail(treatment.id),
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: queryKeys.treatments.balance(treatment.id),
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: queryKeys.sessions.byTreatment(treatment.id),
+                        });
+                        queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+                        queryClient.invalidateQueries({ queryKey: queryKeys.treatments.all });
 
-                        <Controller
-                          control={control}
-                          name="payment_method"
-                          render={({ field }) => (
-                            <AppOptionSelect
-                              label="Payment Method"
-                              category="payment_method"
-                              value={field.value}
-                              onChange={(value) => field.onChange(value)}
-                              error={errors.payment_method?.message}
-                            />
-                          )}
-                        />
-                      </div>
-
-                      <div className="field">
-                        <label>Notes</label>
-                        <textarea className="input textarea" rows={2} {...register('notes')} />
-                      </div>
-
-                      <div className="actions-row">
-                        <Button type="submit" isLoading={createPaymentMutation.isPending}>
-                          Add Payment
-                        </Button>
-                      </div>
-                    </form>
+                        const clientId = treatment.client;
+                        queryClient.invalidateQueries({
+                          queryKey: queryKeys.treatments.byClient(clientId),
+                        });
+                      }}
+                    />
                   ) : null}
 
                   {paymentsQuery.isLoading ? <p>Loading payments...</p> : null}

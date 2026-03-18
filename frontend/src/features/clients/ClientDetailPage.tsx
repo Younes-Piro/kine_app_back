@@ -51,7 +51,7 @@ export function ClientDetailPage() {
 
   const invoicesQuery = useQuery({
     queryKey: queryKeys.invoices.byClient(clientId),
-    queryFn: () => invoicesApi.list(clientId),
+    queryFn: () => invoicesApi.list({ clientId }),
     enabled: Number.isFinite(clientId) && tab === 'invoices' && canViewInvoices,
   });
 

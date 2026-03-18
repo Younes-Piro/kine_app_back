@@ -18,6 +18,8 @@ const PATH_TITLES: Array<{ pattern: RegExp; title: string }> = [
   { pattern: /^\/sessions$/, title: 'Sessions' },
   { pattern: /^\/payments$/, title: 'Payments' },
   { pattern: /^\/invoices$/, title: 'Invoices' },
+  { pattern: /^\/invoices\/new$/, title: 'Create Invoice' },
+  { pattern: /^\/invoices\/\d+$/, title: 'Invoice Detail' },
   { pattern: /^\/settings$/, title: 'Settings' },
 ];
 

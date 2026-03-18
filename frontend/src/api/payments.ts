@@ -9,6 +9,11 @@ export const paymentsApi = {
     return data;
   },
 
+  async detail(id: number) {
+    const { data } = await client.get<Payment>(`/api/payments/${id}/`);
+    return data;
+  },
+
   async create(payload: PaymentCreateRequest) {
     const { data } = await client.post<Payment>('/api/payments/', payload);
     return data;
