@@ -15,6 +15,7 @@ import { InvoiceCreatePage } from '@/features/invoices/InvoiceCreatePage';
 import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage';
 import { InvoiceListPage } from '@/features/invoices/InvoiceListPage';
 import { PaymentListPage } from '@/features/payments/PaymentListPage';
+import { SessionCalendarPage } from '@/features/sessions/SessionCalendarPage';
 import { SessionListPage } from '@/features/sessions/SessionListPage';
 import { SettingsDashboardPage } from '@/features/settings/SettingsDashboardPage';
 import { TreatmentDetailPage } from '@/features/treatments/TreatmentDetailPage';
@@ -134,6 +135,14 @@ export function AppRouter() {
             element={
               <ProtectedRoute permission="session:view">
                 <SessionListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="sessions_calendar"
+            element={
+              <ProtectedRoute permission="session:view">
+                <SessionCalendarPage />
               </ProtectedRoute>
             }
           />

@@ -12,11 +12,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { getApiErrorMessage } from '@/lib/http';
 import type { Session } from '@/types/api';
 
-import { SessionCalendar } from './SessionCalendar';
 import { SessionDetailModal } from './SessionDetailModal';
 import { SessionTable } from './SessionTable';
 
-type ViewMode = 'table' | 'calendar';
 type ModalMode = 'create' | 'edit';
 
 export function SessionListPage() {
@@ -26,7 +24,6 @@ export function SessionListPage() {
   const canCreate = hasPermission('session:create');
   const canUpdate = hasPermission('session:update');
 
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [clientFilter, setClientFilter] = useState<number | undefined>();
   const [treatmentFilter, setTreatmentFilter] = useState<number | undefined>();
   const [dateFrom, setDateFrom] = useState('');
@@ -123,24 +120,10 @@ export function SessionListPage() {
         <CardHeader className="card-header-between">
           <div>
             <CardTitle>Sessions</CardTitle>
-            <p>Switch between table and calendar views.</p>
+            <p>Manage sessions in table view.</p>
           </div>
 
           <div className="actions-inline">
-            <Button
-              type="button"
-              variant={viewMode === 'table' ? 'primary' : 'secondary'}
-              onClick={() => setViewMode('table')}
-            >
-              Table View
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
-              onClick={() => setViewMode('calendar')}
-            >
-              Calendar View
-            </Button>
             {canCreate ? (
               <Button type="button" onClick={openCreateModal}>
                 New Session
@@ -207,25 +190,14 @@ export function SessionListPage() {
           {sessionsQuery.isError ? <p>Failed to load sessions.</p> : null}
 
           {!sessionsQuery.isLoading && !sessionsQuery.isError ? (
-            viewMode === 'table' ? (
-              <SessionTable
-                sessions={filteredSessions}
-                canUpdate={canUpdate}
-                isMarking={markCompletedMutation.isPending}
-                markSessionId={markCompletedMutation.variables}
-                onEdit={openEditModal}
-                onMarkCompleted={(session) => markCompletedMutation.mutate(session.id)}
-              />
-            ) : (
-              <SessionCalendar
-                sessions={filteredSessions}
-                canUpdate={canUpdate}
-                isMarking={markCompletedMutation.isPending}
-                markSessionId={markCompletedMutation.variables}
-                onEdit={openEditModal}
-                onMarkCompleted={(session) => markCompletedMutation.mutate(session.id)}
-              />
-            )
+            <SessionTable
+              sessions={filteredSessions}
+              canUpdate={canUpdate}
+              isMarking={markCompletedMutation.isPending}
+              markSessionId={markCompletedMutation.variables}
+              onEdit={openEditModal}
+              onMarkCompleted={(session) => markCompletedMutation.mutate(session.id)}
+            />
           ) : null}
         </CardBody>
       </Card>
