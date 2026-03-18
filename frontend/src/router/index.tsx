@@ -14,6 +14,7 @@ import { InvoiceListPage } from '@/features/invoices/InvoiceListPage';
 import { PaymentListPage } from '@/features/payments/PaymentListPage';
 import { SessionListPage } from '@/features/sessions/SessionListPage';
 import { SettingsDashboardPage } from '@/features/settings/SettingsDashboardPage';
+import { TreatmentDetailPage } from '@/features/treatments/TreatmentDetailPage';
 import { TreatmentListPage } from '@/features/treatments/TreatmentListPage';
 import { UserCreatePage } from '@/features/users/UserCreatePage';
 import { UserListPage } from '@/features/users/UserListPage';
@@ -114,6 +115,14 @@ export function AppRouter() {
             element={
               <ProtectedRoute permission="treatment:view">
                 <TreatmentListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="treatments/:id"
+            element={
+              <ProtectedRoute permission="treatment:view">
+                <TreatmentDetailPage />
               </ProtectedRoute>
             }
           />

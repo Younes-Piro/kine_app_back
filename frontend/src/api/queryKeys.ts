@@ -16,6 +16,16 @@ export const queryKeys = {
   treatments: {
     all: ['treatments'] as const,
     byClient: (id: number) => ['treatments', { client_id: id }] as const,
+    detail: (id: number) => ['treatments', id] as const,
+    balance: (id: number) => ['treatments', id, 'balance'] as const,
+  },
+  sessions: {
+    all: ['sessions'] as const,
+    byTreatment: (id: number) => ['sessions', { treatment_id: id }] as const,
+  },
+  payments: {
+    all: ['payments'] as const,
+    byTreatment: (id: number) => ['payments', { treatment: id }] as const,
   },
   invoices: {
     all: ['invoices'] as const,

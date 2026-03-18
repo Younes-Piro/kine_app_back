@@ -116,6 +116,20 @@ export interface ClientCreateRequest {
 
 export type ClientUpdateRequest = Partial<ClientCreateRequest>;
 
+export type TreatmentStatus = 'open' | 'completed' | 'cancelled';
+
+export interface TreatmentSession {
+  id: number;
+  session_date: string;
+  status: number | null;
+  status_label: string | null;
+  payment_status: number | null;
+  payment_status_label: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TreatmentListItem {
   id: number;
   client: number;
@@ -128,13 +142,105 @@ export interface TreatmentListItem {
   session_rhythm_label: string | null;
   start_date: string;
   end_date: string | null;
-  status: 'open' | 'completed' | 'cancelled';
+  status: TreatmentStatus;
   session_price: string;
   total_price: string;
   total_remaining_amount: string;
   balance: string;
   is_paid: boolean;
   is_active: boolean;
+}
+
+export interface TreatmentDetail extends TreatmentListItem {
+  treating_doctor: string | null;
+  diagnosis: string | null;
+  notes: string | null;
+  sessions: TreatmentSession[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TreatmentCreateRequest {
+  client: number;
+  title?: string;
+  treating_doctor?: string;
+  diagnosis?: string;
+  type_and_site: string;
+  prescribed_sessions: number;
+  session_rhythm: number;
+  start_date: string;
+  session_price: string;
+  notes?: string;
+}
+
+export interface TreatmentUpdateRequest {
+  title?: string;
+  treating_doctor?: string;
+  diagnosis?: string;
+  type_and_site?: string;
+  prescribed_sessions?: number;
+  session_rhythm?: number;
+  start_date?: string;
+  session_price?: string;
+  notes?: string;
+  status?: TreatmentStatus;
+}
+
+export interface TreatmentBalanceResponse {
+  treatment_id: number;
+  session_price: string;
+  total_price: string;
+  total_paid: string;
+  total_remaining_amount: string;
+  balance: string;
+  is_paid: boolean;
+  sessions: Array<{
+    id: number;
+    session_date: string;
+    status: string | null;
+    payment_status: string | null;
+  }>;
+}
+
+export interface SessionItem {
+  id: number;
+  treatment: number;
+  client: number;
+  client_full_name: string;
+  treatment_title: string | null;
+  treatment_type_and_site: string;
+  session_date: string;
+  status: number | null;
+  status_label: string | null;
+  payment_status: number | null;
+  payment_status_label: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Payment {
+  id: number;
+  treatment: number;
+  treatment_title: string | null;
+  client_full_name: string;
+  treatment_total_remaining_amount: string;
+  amount: string;
+  payment_date: string;
+  payment_method: number | null;
+  payment_method_label: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentCreateRequest {
+  treatment: number;
+  amount: string;
+  payment_date: string;
+  payment_method?: number;
+  notes?: string;
 }
 
 export interface InvoiceListItem {

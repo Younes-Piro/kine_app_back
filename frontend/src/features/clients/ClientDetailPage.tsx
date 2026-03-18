@@ -17,6 +17,8 @@ import { formatDate, formatMoney, resolveMediaUrl } from '@/lib/formatters';
 import { getApiErrorMessage } from '@/lib/http';
 import type { InvoiceListItem, TreatmentListItem } from '@/types/api';
 
+import { TreatmentCreateDialog } from '../treatments/TreatmentCreateDialog';
+
 type DetailTab = 'info' | 'treatments' | 'invoices';
 
 export function ClientDetailPage() {
@@ -27,9 +29,13 @@ export function ClientDetailPage() {
   const clientId = Number(params.id);
   const [tab, setTab] = useState<DetailTab>('info');
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [createTreatmentOpen, setCreateTreatmentOpen] = useState(false);
 
   const canEdit = hasPermission('client:update');
   const canDeactivate = hasPermission('client:delete');
+  const canCreateTreatment = hasPermission('treatment:create');
+  const canViewTreatments = hasPermission('treatment:view');
+  const canViewInvoices = hasPermission('invoice:view');
 
   const clientQuery = useQuery({
     queryKey: queryKeys.clients.detail(clientId),
@@ -40,13 +46,13 @@ export function ClientDetailPage() {
   const treatmentsQuery = useQuery({
     queryKey: queryKeys.treatments.byClient(clientId),
     queryFn: () => treatmentsApi.list(clientId),
-    enabled: Number.isFinite(clientId) && tab === 'treatments',
+    enabled: Number.isFinite(clientId) && tab === 'treatments' && canViewTreatments,
   });
 
   const invoicesQuery = useQuery({
     queryKey: queryKeys.invoices.byClient(clientId),
     queryFn: () => invoicesApi.list(clientId),
-    enabled: Number.isFinite(clientId) && tab === 'invoices',
+    enabled: Number.isFinite(clientId) && tab === 'invoices' && canViewInvoices,
   });
 
   const deactivateMutation = useMutation({
@@ -67,12 +73,20 @@ export function ClientDetailPage() {
       { header: 'Type/Site', render: (item) => item.type_and_site },
       { header: 'Status', render: (item) => <StatusBadge status={item.status} /> },
       {
+        header: 'Sessions',
+        render: (item) => `${item.completed_sessions}/${item.prescribed_sessions}`,
+      },
+      {
         header: 'Price',
         render: (item) => formatMoney(item.total_price),
       },
       {
         header: 'Remaining',
         render: (item) => formatMoney(item.total_remaining_amount),
+      },
+      {
+        header: 'Start Date',
+        render: (item) => formatDate(item.start_date, 'yyyy-MM-dd'),
       },
     ],
     [],
@@ -138,20 +152,24 @@ export function ClientDetailPage() {
             >
               Info
             </button>
-            <button
-              type="button"
-              className={tab === 'treatments' ? 'tab-btn active' : 'tab-btn'}
-              onClick={() => setTab('treatments')}
-            >
-              Treatments
-            </button>
-            <button
-              type="button"
-              className={tab === 'invoices' ? 'tab-btn active' : 'tab-btn'}
-              onClick={() => setTab('invoices')}
-            >
-              Invoices
-            </button>
+            {canViewTreatments ? (
+              <button
+                type="button"
+                className={tab === 'treatments' ? 'tab-btn active' : 'tab-btn'}
+                onClick={() => setTab('treatments')}
+              >
+                Treatments
+              </button>
+            ) : null}
+            {canViewInvoices ? (
+              <button
+                type="button"
+                className={tab === 'invoices' ? 'tab-btn active' : 'tab-btn'}
+                onClick={() => setTab('invoices')}
+              >
+                Invoices
+              </button>
+            ) : null}
           </div>
 
           {tab === 'info' ? (
@@ -189,31 +207,51 @@ export function ClientDetailPage() {
 
           {tab === 'treatments' ? (
             <>
-              {treatmentsQuery.isLoading ? <p>Loading treatments...</p> : null}
-              {treatmentsQuery.isError ? <p>Failed to load treatments.</p> : null}
-              {treatmentsQuery.data ? (
-                <Table
-                  columns={treatmentColumns}
-                  data={treatmentsQuery.data}
-                  getRowKey={(item) => item.id}
-                  emptyMessage="No treatments for this client."
-                />
-              ) : null}
+              {canViewTreatments ? (
+                <>
+                  <div className="actions-row">
+                    {canCreateTreatment ? (
+                      <Button type="button" onClick={() => setCreateTreatmentOpen(true)}>
+                        Add Treatment
+                      </Button>
+                    ) : null}
+                  </div>
+                  {treatmentsQuery.isLoading ? <p>Loading treatments...</p> : null}
+                  {treatmentsQuery.isError ? <p>Failed to load treatments.</p> : null}
+                  {treatmentsQuery.data ? (
+                    <Table
+                      columns={treatmentColumns}
+                      data={treatmentsQuery.data}
+                      getRowKey={(item) => item.id}
+                      emptyMessage="No treatments for this client."
+                      onRowClick={(item) => navigate(`/treatments/${item.id}`)}
+                    />
+                  ) : null}
+                </>
+              ) : (
+                <p>You do not have permission to view treatments.</p>
+              )}
             </>
           ) : null}
 
           {tab === 'invoices' ? (
             <>
-              {invoicesQuery.isLoading ? <p>Loading invoices...</p> : null}
-              {invoicesQuery.isError ? <p>Failed to load invoices.</p> : null}
-              {invoicesQuery.data ? (
-                <Table
-                  columns={invoiceColumns}
-                  data={invoicesQuery.data}
-                  getRowKey={(item) => item.id}
-                  emptyMessage="No invoices for this client."
-                />
-              ) : null}
+              {canViewInvoices ? (
+                <>
+                  {invoicesQuery.isLoading ? <p>Loading invoices...</p> : null}
+                  {invoicesQuery.isError ? <p>Failed to load invoices.</p> : null}
+                  {invoicesQuery.data ? (
+                    <Table
+                      columns={invoiceColumns}
+                      data={invoicesQuery.data}
+                      getRowKey={(item) => item.id}
+                      emptyMessage="No invoices for this client."
+                    />
+                  ) : null}
+                </>
+              ) : (
+                <p>You do not have permission to view invoices.</p>
+              )}
             </>
           ) : null}
         </CardBody>
@@ -227,6 +265,12 @@ export function ClientDetailPage() {
         isLoading={deactivateMutation.isPending}
         onCancel={() => setDeactivateOpen(false)}
         onConfirm={() => deactivateMutation.mutate()}
+      />
+
+      <TreatmentCreateDialog
+        open={createTreatmentOpen}
+        clientId={client.id}
+        onClose={() => setCreateTreatmentOpen(false)}
       />
     </>
   );

@@ -36,7 +36,7 @@ client.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().accessToken;
 
   if (accessToken) {
-    const headers = (config.headers ?? {}) as Record<string, string>;
+    const headers = (config.headers ?? {}) as any;
     headers.Authorization = `Bearer ${accessToken}`;
     config.headers = headers;
   }
