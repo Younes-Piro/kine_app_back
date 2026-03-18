@@ -638,6 +638,37 @@ select:focus {
   gap: 0.5rem;
 }
 
+.permissions-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.permissions-module-card {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.permissions-module-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.permission-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.permission-option small {
+  display: block;
+  color: var(--color-neutral-500);
+  font-size: 0.73rem;
+}
+
 .help-text {
   margin: 0;
   color: var(--color-neutral-500);

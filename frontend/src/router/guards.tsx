@@ -21,7 +21,7 @@ export function ProtectedRoute({ children, permission }: ProtectedRouteProps) {
   const location = useLocation();
   const accessToken = useAuthStore((state) => state.accessToken);
   const refreshToken = useAuthStore((state) => state.refreshToken);
-  const { role, hasPermission } = usePermissions();
+  const { role, hasPermission, isLoading } = usePermissions();
 
   if (!accessToken && !refreshToken) {
     return <Navigate to={toLoginRedirect(location.pathname, location.search)} replace />;
@@ -31,8 +31,12 @@ export function ProtectedRoute({ children, permission }: ProtectedRouteProps) {
     return <>{children}</>;
   }
 
-  if (!role) {
+  if (isLoading) {
     return <p>Checking permissions...</p>;
+  }
+
+  if (!role) {
+    return <Navigate to="/403" replace />;
   }
 
   if (!hasPermission(permission)) {
@@ -46,14 +50,18 @@ export function AdminRoute({ children }: GuardProps) {
   const location = useLocation();
   const accessToken = useAuthStore((state) => state.accessToken);
   const refreshToken = useAuthStore((state) => state.refreshToken);
-  const { role } = usePermissions();
+  const { role, isLoading } = usePermissions();
 
   if (!accessToken && !refreshToken) {
     return <Navigate to={toLoginRedirect(location.pathname, location.search)} replace />;
   }
 
-  if (!role) {
+  if (isLoading) {
     return <p>Checking permissions...</p>;
+  }
+
+  if (!role) {
+    return <Navigate to="/403" replace />;
   }
 
   if (role !== 'admin') {

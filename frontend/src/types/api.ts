@@ -43,6 +43,16 @@ export interface MyPermissionsResponse {
   permissions: string[];
 }
 
+export interface UserPermissionsResponse {
+  user_id: number;
+  role: 'admin' | 'staff';
+  permissions: Permission[] | 'all';
+}
+
+export interface AssignPermissionsRequest {
+  permission_ids: number[];
+}
+
 export interface User {
   id: number;
   username: string;

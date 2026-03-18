@@ -1,10 +1,19 @@
 import { client } from '@/api/client';
-import type { MyPermissionsResponse, Permission } from '@/types/api';
+import type {
+  AssignPermissionsRequest,
+  MyPermissionsResponse,
+  Permission,
+  UserPermissionsResponse,
+} from '@/types/api';
 
-interface UserPermissionsResponse {
+interface AssignPermissionsResponse {
+  detail: string;
   user_id: number;
-  role: 'admin' | 'staff';
-  permissions: 'all' | Permission[];
+  permissions: Permission[];
+}
+
+interface ClearPermissionsResponse {
+  detail: string;
 }
 
 export const permissionsApi = {
@@ -23,15 +32,16 @@ export const permissionsApi = {
     return data;
   },
 
-  async assignUserPermissions(userId: number, permissionIds: number[]) {
-    const { data } = await client.patch(`/api/permissions/users/${userId}/`, {
-      permission_ids: permissionIds,
-    });
+  async assignUserPermissions(userId: number, payload: AssignPermissionsRequest) {
+    const { data } = await client.patch<AssignPermissionsResponse>(
+      `/api/permissions/users/${userId}/`,
+      payload,
+    );
     return data;
   },
 
   async clearUserPermissions(userId: number) {
-    const { data } = await client.delete(`/api/permissions/users/${userId}/`);
+    const { data } = await client.delete<ClearPermissionsResponse>(`/api/permissions/users/${userId}/`);
     return data;
   },
 };
