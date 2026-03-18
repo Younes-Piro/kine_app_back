@@ -36,6 +36,10 @@ export const queryKeys = {
     detail: (id: number) => ['invoices', id] as const,
   },
   settings: {
+    dashboard: ['settings'] as const,
     options: (category?: string) => ['settings', 'options', category] as const,
+    holidays: ['settings', 'holidays'] as const,
+    closedDays: ['settings', 'closed-days'] as const,
+    closureRanges: ['settings', 'closure-ranges'] as const,
   },
 };

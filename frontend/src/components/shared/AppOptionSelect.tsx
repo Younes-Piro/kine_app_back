@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 import { useAppOptions } from '@/hooks/useAppOptions';
 
 interface AppOptionSelectProps {
@@ -23,11 +21,6 @@ export function AppOptionSelect({
 }: AppOptionSelectProps) {
   const { data, isLoading } = useAppOptions(category);
 
-  const sortedOptions = useMemo(
-    () => (data ?? []).slice().sort((a, b) => a.sort_order - b.sort_order),
-    [data],
-  );
-
   return (
     <div className="field">
       <label>{label}</label>
@@ -41,7 +34,7 @@ export function AppOptionSelect({
         }}
       >
         <option value="">{isLoading ? 'Loading...' : placeholder}</option>
-        {sortedOptions.map((option) => (
+        {(data ?? []).map((option) => (
           <option key={option.id} value={option.id}>
             {option.label}
           </option>

@@ -669,6 +669,60 @@ select:focus {
   font-size: 0.73rem;
 }
 
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.settings-form-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-form-actions {
+  grid-column: 1 / -1;
+}
+
+.settings-group-block {
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 0.75rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.settings-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.weekday-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.weekday-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+}
+
+.weekday-toggle input {
+  margin: 0;
+}
+
+.weekday-toggle.active {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+}
+
 .help-text {
   margin: 0;
   color: var(--color-neutral-500);
@@ -794,7 +848,13 @@ select:focus {
   .detail-grid,
   .metrics-grid,
   .filters-grid,
-  .session-calendar-layout {
+  .session-calendar-layout,
+  .settings-form-grid,
+  .settings-form-compact {
     grid-template-columns: 1fr;
+  }
+
+  .weekday-toggle-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

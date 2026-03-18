@@ -73,3 +73,4 @@ frontend/.env.example
 frontend/.env
 plans/
 frontend/invoice_example.pdf
+db.sqlite3

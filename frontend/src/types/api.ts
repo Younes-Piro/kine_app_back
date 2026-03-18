@@ -85,6 +85,68 @@ export interface AppOption {
   sort_order: number;
 }
 
+export interface AppOptionCreateRequest {
+  category: string;
+  code: string;
+  label: string;
+  sort_order: number;
+}
+
+export type AppOptionUpdateRequest = Partial<AppOptionCreateRequest> & {
+  is_active?: boolean;
+};
+
+export interface Holiday {
+  id: number;
+  name: string;
+  date: string;
+  source: 'manual' | 'seed';
+  is_active: boolean;
+}
+
+export interface HolidayCreateRequest {
+  name: string;
+  date: string;
+}
+
+export interface ClinicClosedDay {
+  id: number;
+  weekday: number;
+  weekday_label: string;
+  is_active: boolean;
+}
+
+export interface ClinicClosedDayCreateRequest {
+  weekday: number;
+}
+
+export interface ClinicClosedDayUpdateRequest {
+  is_active?: boolean;
+}
+
+export interface ClinicClosureRange {
+  id: number;
+  reason: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  notes: string | null;
+}
+
+export interface ClinicClosureRangeCreateRequest {
+  reason: string;
+  start_date: string;
+  end_date: string;
+  notes?: string;
+}
+
+export interface SettingsDashboard {
+  options: AppOption[];
+  holidays: Holiday[];
+  closed_days: ClinicClosedDay[];
+  closure_ranges: ClinicClosureRange[];
+}
+
 export interface Client {
   id: number;
   file_number: string;
