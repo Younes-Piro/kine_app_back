@@ -4,6 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import type { EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { format } from 'date-fns';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -38,6 +39,59 @@ function getSessionColor(session: Session) {
   }
 
   return 'var(--color-info)';
+}
+
+function flattenErrorText(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(flattenErrorText).join(' ');
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .map(flattenErrorText)
+      .join(' ');
+  }
+
+  return '';
+}
+
+function getCalendarRestrictionReason(error: unknown): string | null {
+  let rawText = '';
+
+  if (axios.isAxiosError(error)) {
+    rawText = flattenErrorText(error.response?.data);
+    if (!rawText && typeof error.message === 'string') {
+      rawText = error.message;
+    }
+  } else if (error instanceof Error) {
+    rawText = error.message;
+  } else {
+    rawText = flattenErrorText(error);
+  }
+
+  const normalized = rawText.toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.includes('clinic closed day')) {
+    return 'Cannot move session: the selected day is a clinic closed day.';
+  }
+  if (normalized.includes('holiday')) {
+    return 'Cannot move session: the selected day is a holiday.';
+  }
+  if (normalized.includes('closure range')) {
+    return 'Cannot move session: the selected day is inside a clinic closure period.';
+  }
+  if (normalized.includes('inactive treatment')) {
+    return 'Cannot move session: this treatment is inactive.';
+  }
+
+  return null;
 }
 
 export function SessionCalendarPage() {
@@ -122,7 +176,14 @@ export function SessionCalendarPage() {
       await invalidateSessionRelatedQueries(session);
     } catch (error) {
       info.revert();
-      toast.error(getApiErrorMessage(error, 'Failed to reschedule session'));
+      const restrictionReason = getCalendarRestrictionReason(error);
+      toast.error(
+        restrictionReason ??
+          getApiErrorMessage(
+            error,
+            'Cannot move session to this day. The selected date is restricted.',
+          ),
+      );
     }
   };
 

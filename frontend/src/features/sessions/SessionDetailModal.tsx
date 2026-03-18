@@ -10,6 +10,7 @@ import { AppOptionSelect } from '@/components/shared/AppOptionSelect';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 import type { Session, TreatmentListItem } from '@/types/api';
 
@@ -101,6 +102,7 @@ export function SessionDetailModal({
       const treatmentId = values.treatment ?? defaultTreatmentId;
       if (!treatmentId) {
         setError('treatment', { type: 'manual', message: 'Treatment is required' });
+        toast.error('Treatment is required');
         throw new Error('Treatment is required');
       }
 
@@ -143,7 +145,11 @@ export function SessionDetailModal({
         </>
       }
     >
-      <form id="session-form" className="stack" onSubmit={handleSubmit((values) => saveMutation.mutate(values))}>
+      <form
+        id="session-form"
+        className="stack"
+        onSubmit={handleSubmit((values) => saveMutation.mutate(values), showFormValidationToast)}
+      >
         {mode === 'create' ? (
           <div className="field">
             <label>Treatment</label>

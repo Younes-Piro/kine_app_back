@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useLogin } from '@/hooks/useAuth';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { useAuthStore } from '@/store/authStore';
 
 const loginSchema = z.object({
@@ -54,7 +55,7 @@ export function LoginPage() {
         <p>Use your backend user credentials.</p>
       </CardHeader>
       <CardBody>
-        <form className="stack" onSubmit={handleSubmit(onSubmit)}>
+        <form className="stack" onSubmit={handleSubmit(onSubmit, showFormValidationToast)}>
           <Input label="Username" {...register('username')} error={errors.username?.message} />
           <Input
             label="Password"

@@ -12,6 +12,7 @@ import { AppOptionSelect } from '@/components/shared/AppOptionSelect';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 
 const treatmentCreateSchema = z.object({
@@ -97,6 +98,7 @@ export function TreatmentCreateDialog({ open, clientId, onClose }: TreatmentCrea
       const selectedClientId = clientId ?? values.client;
       if (!selectedClientId) {
         setError('client', { type: 'manual', message: 'Client is required' });
+        toast.error('Client is required');
         return Promise.reject(new Error('Client is required'));
       }
 
@@ -156,7 +158,11 @@ export function TreatmentCreateDialog({ open, clientId, onClose }: TreatmentCrea
         </>
       }
     >
-      <form id="treatment-create-form" className="stack" onSubmit={handleSubmit((values) => createMutation.mutate(values))}>
+      <form
+        id="treatment-create-form"
+        className="stack"
+        onSubmit={handleSubmit((values) => createMutation.mutate(values), showFormValidationToast)}
+      >
         {!clientId ? (
           <div className="field">
             <label>Client</label>

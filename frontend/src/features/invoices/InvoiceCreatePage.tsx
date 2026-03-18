@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { formatMoney } from '@/lib/formatters';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 
 const invoiceCreateSchema = z.object({
@@ -111,7 +112,10 @@ export function InvoiceCreatePage() {
       </CardHeader>
 
       <CardBody>
-        <form className="stack" onSubmit={handleSubmit((values) => createMutation.mutate(values))}>
+        <form
+          className="stack"
+          onSubmit={handleSubmit((values) => createMutation.mutate(values), showFormValidationToast)}
+        >
           <div className="grid-2">
             <div className="field">
               <label>Client</label>

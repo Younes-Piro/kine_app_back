@@ -10,6 +10,7 @@ import { usersApi } from '@/api/users';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 import type { User } from '@/types/api';
 
@@ -98,7 +99,11 @@ export function UserEditDialog({ user, open, onClose }: UserEditDialogProps) {
         </>
       }
     >
-      <form id="user-edit-form" className="stack" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        id="user-edit-form"
+        className="stack"
+        onSubmit={handleSubmit(onSubmit, showFormValidationToast)}
+      >
         <Input label="Username" {...register('username')} error={errors.username?.message} />
         <Input label="Email" {...register('email')} error={errors.email?.message} />
 

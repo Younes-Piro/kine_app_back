@@ -10,6 +10,7 @@ import { usersApi } from '@/api/users';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 
 const userCreateSchema = z.object({
@@ -61,7 +62,7 @@ export function UserCreatePage() {
         <CardTitle>Create User</CardTitle>
       </CardHeader>
       <CardBody>
-        <form className="stack" onSubmit={handleSubmit(onSubmit)}>
+        <form className="stack" onSubmit={handleSubmit(onSubmit, showFormValidationToast)}>
           <Input label="Username" {...register('username')} error={errors.username?.message} />
           <Input label="Email" {...register('email')} error={errors.email?.message} />
           <Input

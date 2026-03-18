@@ -11,6 +11,7 @@ import { AppOptionSelect } from '@/components/shared/AppOptionSelect';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 import type { TreatmentDetail } from '@/types/api';
 
@@ -130,7 +131,11 @@ export function TreatmentEditDialog({ open, treatment, onClose }: TreatmentEditD
         </>
       }
     >
-      <form id="treatment-edit-form" className="stack" onSubmit={handleSubmit((values) => updateMutation.mutate(values))}>
+      <form
+        id="treatment-edit-form"
+        className="stack"
+        onSubmit={handleSubmit((values) => updateMutation.mutate(values), showFormValidationToast)}
+      >
         <div className="grid-2">
           <Input label="Title" {...register('title')} error={errors.title?.message} />
           <Input

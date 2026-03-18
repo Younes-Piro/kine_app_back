@@ -9,6 +9,7 @@ import { AppOptionSelect } from '@/components/shared/AppOptionSelect';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { formatMoney } from '@/lib/formatters';
+import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 import type { Payment } from '@/types/api';
 
@@ -78,7 +79,10 @@ export function PaymentCreateForm({
   });
 
   return (
-    <form className="stack" onSubmit={handleSubmit((values) => createPaymentMutation.mutate(values))}>
+    <form
+      className="stack"
+      onSubmit={handleSubmit((values) => createPaymentMutation.mutate(values), showFormValidationToast)}
+    >
       <p className="help-text">
         Remaining amount: {formatMoney(maxRemainingAmount)}
         {' · '}

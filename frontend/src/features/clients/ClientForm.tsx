@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { resolveMediaUrl } from '@/lib/formatters';
+import { showFormValidationToast } from '@/lib/formValidation';
 
 import { clientFormSchema, type ClientFormValues } from './clientFormSchema';
 
@@ -70,7 +71,7 @@ export function ClientForm({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardBody>
-        <form className="stack" onSubmit={handleSubmit(onSubmit)}>
+        <form className="stack" onSubmit={handleSubmit(onSubmit, showFormValidationToast)}>
           <div className="grid-2">
             <Input label="Full Name" {...register('full_name')} error={errors.full_name?.message} />
             <Input label="CIN" {...register('cin')} error={errors.cin?.message} />
