@@ -41,6 +41,10 @@ export function TreatmentListPage() {
 
   const columns: Array<TableColumn<TreatmentListItem>> = [
     {
+      header: 'ID',
+      render: (item) => item.id,
+    },
+    {
       header: 'Client',
       render: (item) => item.client_full_name,
     },

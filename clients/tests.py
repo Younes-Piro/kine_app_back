@@ -7,6 +7,7 @@ from app_settings.models import AppOption
 from payments.models import Payment
 
 from .models import Client, Treatment
+from .serializers import ClientSerializer
 from .services import deactivate_client_with_cascade, deactivate_treatment_with_cascade
 
 
@@ -134,3 +135,14 @@ class DeactivateCascadeTests(TestCase):
 
         self.assertFalse(inactive_treatment.is_active)
         self.assertTrue(inactive_payment.is_active)
+
+    def test_client_create_does_not_accept_balance_input(self):
+        serializer = ClientSerializer(
+            data={
+                "full_name": "Client C",
+                "balance": "999.99",
+            }
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        client = serializer.save()
+        self.assertEqual(client.balance, Decimal("0"))

@@ -182,7 +182,6 @@ export interface ClientCreateRequest {
   marital_status?: number;
   social_security?: number;
   dossier_type?: number;
-  balance?: string;
   profile_photo?: File;
 }
 

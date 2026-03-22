@@ -27,7 +27,6 @@ function toFormData(payload: ClientCreateRequest | ClientUpdateRequest) {
   appendFormValue(formData, 'marital_status', payload.marital_status);
   appendFormValue(formData, 'social_security', payload.social_security);
   appendFormValue(formData, 'dossier_type', payload.dossier_type);
-  appendFormValue(formData, 'balance', payload.balance);
 
   if (isFile(payload.profile_photo)) {
     formData.append('profile_photo', payload.profile_photo);

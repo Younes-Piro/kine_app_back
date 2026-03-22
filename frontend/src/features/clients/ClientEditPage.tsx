@@ -65,7 +65,6 @@ export function ClientEditPage() {
         marital_status: client.marital_status ?? undefined,
         social_security: client.social_security ?? undefined,
         dossier_type: client.dossier_type ?? undefined,
-        balance: client.balance ?? '0',
       }}
       onCancel={() => navigate(`/clients/${client.id}`)}
       onSubmit={(values) => updateMutation.mutate(values)}

@@ -47,7 +47,10 @@ export function PaymentListPage() {
     optionSource.forEach((payment) => {
       const treatmentLabel = payment.treatment_title ?? `Treatment #${payment.treatment}`;
       if (!map.has(payment.treatment)) {
-        map.set(payment.treatment, `${payment.client_full_name} - ${treatmentLabel}`);
+        map.set(
+          payment.treatment,
+          `#${payment.treatment} - ${treatmentLabel} (${payment.client_full_name}) · Remaining: ${formatMoney(payment.treatment_total_remaining_amount)}`,
+        );
       }
     });
 
@@ -86,7 +89,8 @@ export function PaymentListPage() {
     },
     {
       header: 'Treatment',
-      render: (payment) => payment.treatment_title ?? `Treatment #${payment.treatment}`,
+      render: (payment) =>
+        `#${payment.treatment} - ${payment.treatment_title ?? `Treatment #${payment.treatment}`}`,
     },
     {
       header: 'Amount',

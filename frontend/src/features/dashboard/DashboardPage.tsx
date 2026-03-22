@@ -7,7 +7,7 @@ export function DashboardPage() {
         <CardTitle>Welcome to KineApp</CardTitle>
       </CardHeader>
       <CardBody>
-        <p>Frontend foundation is active. Start with Auth, Users, and Clients modules.</p>
+        <p></p>
       </CardBody>
     </Card>
   );

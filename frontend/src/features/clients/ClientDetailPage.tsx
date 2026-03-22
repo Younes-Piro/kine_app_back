@@ -69,6 +69,7 @@ export function ClientDetailPage() {
 
   const treatmentColumns: Array<TableColumn<TreatmentListItem>> = useMemo(
     () => [
+      { header: 'ID', render: (item) => item.id },
       { header: 'Title', render: (item) => item.title ?? item.type_and_site },
       { header: 'Type/Site', render: (item) => item.type_and_site },
       { header: 'Status', render: (item) => <StatusBadge status={item.status} /> },
@@ -190,7 +191,7 @@ export function ClientDetailPage() {
               <div>
                 <h4>Finance</h4>
                 <p>Balance: {formatMoney(client.balance)}</p>
-                <p>Status: <StatusBadge status={client.is_active ? 'completed' : 'cancelled'} /></p>
+                <p>Status: <StatusBadge status={client.is_active ? 'active' : 'inactive'} /></p>
                 <p>Created: {formatDate(client.created_at)}</p>
                 <p>Updated: {formatDate(client.updated_at)}</p>
               </div>

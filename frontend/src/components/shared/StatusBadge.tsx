@@ -8,6 +8,8 @@ const STATUS_VARIANT_MAP: Record<string, 'success' | 'warning' | 'danger' | 'inf
   paid: 'success',
   unpaid: 'danger',
   partial: 'warning',
+  active: 'success',
+  inactive: 'danger',
 };
 
 interface StatusBadgeProps {

@@ -10,6 +10,7 @@ import { AppOptionSelect } from '@/components/shared/AppOptionSelect';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { formatMoney } from '@/lib/formatters';
 import { showFormValidationToast } from '@/lib/formValidation';
 import { getApiErrorMessage } from '@/lib/http';
 import type { Session, TreatmentListItem } from '@/types/api';
@@ -55,6 +56,7 @@ export function SessionDetailModal({
     control,
     reset,
     setError,
+    watch,
     formState: { errors },
   } = useForm<SessionFormValues>({
     resolver: zodResolver(sessionFormSchema),
@@ -65,6 +67,9 @@ export function SessionDetailModal({
       notes: '',
     },
   });
+
+  const selectedTreatmentId = watch('treatment');
+  const selectedTreatment = treatments.find((item) => item.id === selectedTreatmentId);
 
   useEffect(() => {
     if (!open) {
@@ -169,7 +174,7 @@ export function SessionDetailModal({
                     <option value="">Select treatment</option>
                     {treatments.map((treatment) => (
                       <option key={treatment.id} value={treatment.id}>
-                        {treatment.client_full_name} - {treatment.title ?? treatment.type_and_site}
+                        {`#${treatment.id} - ${treatment.title ?? treatment.type_and_site} (${treatment.client_full_name})`}
                       </option>
                     ))}
                   </select>
@@ -183,12 +188,17 @@ export function SessionDetailModal({
               />
             )}
             {errors.treatment ? <p className="field-error">{errors.treatment.message}</p> : null}
+            {selectedTreatment ? (
+              <p className="help-text">
+                {`Type/Site: ${selectedTreatment.type_and_site} · Status: ${selectedTreatment.status} · Sessions: ${selectedTreatment.completed_sessions}/${selectedTreatment.prescribed_sessions} · Remaining: ${formatMoney(selectedTreatment.total_remaining_amount)}`}
+              </p>
+            ) : null}
           </div>
         ) : (
           <div className="field">
             <label>Treatment</label>
             <p>
-              {session?.treatment_title ?? session?.treatment_type_and_site} (ID: {session?.treatment})
+              #{session?.treatment} - {session?.treatment_title ?? session?.treatment_type_and_site}
             </p>
           </div>
         )}

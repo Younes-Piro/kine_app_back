@@ -32,7 +32,6 @@ const DEFAULT_VALUES: ClientFormValues = {
   marital_status: undefined,
   social_security: undefined,
   dossier_type: undefined,
-  balance: '',
   profile_photo: undefined,
 };
 
@@ -145,8 +144,6 @@ export function ClientForm({
                 />
               )}
             />
-
-            <Input label="Balance" {...register('balance')} error={errors.balance?.message} />
           </div>
 
           <div className="field">

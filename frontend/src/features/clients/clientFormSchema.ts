@@ -18,10 +18,6 @@ export const clientFormSchema = z.object({
   marital_status: z.number().optional(),
   social_security: z.number().optional(),
   dossier_type: z.number().optional(),
-  balance: z
-    .string()
-    .optional()
-    .refine((value) => !value || !Number.isNaN(Number(value)), 'Balance must be numeric'),
   profile_photo: z.custom<File | undefined>(),
 });
 
@@ -44,7 +40,6 @@ export function toClientPayload(values: ClientFormValues): ClientCreateRequest {
     marital_status: values.marital_status,
     social_security: values.social_security,
     dossier_type: values.dossier_type,
-    balance: optionalString(values.balance),
     profile_photo: values.profile_photo,
   };
 }

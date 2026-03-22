@@ -38,7 +38,7 @@ class ClientSerializer(serializers.ModelSerializer):
            "created_at",
            "updated_at",
        ]
-       read_only_fields = ["created_at", "updated_at"]
+       read_only_fields = ["balance", "created_at", "updated_at"]
    def validate_gender(self, value):
        if value and value.category != AppOption.CATEGORY_GENDER:
            raise serializers.ValidationError("Selected option is not a gender.")

@@ -173,8 +173,12 @@ export function TreatmentDetailPage() {
       <Card>
         <CardHeader className="card-header-between">
           <div>
-            <CardTitle>{treatment.title ?? treatment.type_and_site}</CardTitle>
-            <p>{treatment.client_full_name}</p>
+            <CardTitle>
+              #{treatment.id} - {treatment.title ?? treatment.type_and_site}
+            </CardTitle>
+            <p>
+              Client #{treatment.client}: {treatment.client_full_name}
+            </p>
           </div>
           <div className="actions-inline">
             {canUpdateTreatment ? (
@@ -198,8 +202,16 @@ export function TreatmentDetailPage() {
         <CardBody>
           <div className="detail-grid">
             <div className="metric-card">
-              <h4>Status</h4>
-              <StatusBadge status={treatment.status} />
+              <h4>Client</h4>
+              <p>{treatment.client_full_name}</p>
+            </div>
+            <div className="metric-card">
+              <h4>Treating Doctor</h4>
+              <p>{treatment.treating_doctor}</p>
+            </div>
+            <div className="metric-card">
+              <h4>Diagnosis</h4>
+              <p>{treatment.diagnosis}</p>
             </div>
             <div className="metric-card">
               <h4>Sessions</h4>
@@ -208,12 +220,18 @@ export function TreatmentDetailPage() {
               </p>
             </div>
             <div className="metric-card">
-              <h4>Session Price</h4>
-              <p>{formatMoney(treatment.session_price)}</p>
+              <h4>Session Rhythm</h4>
+              <p>{treatment.session_rhythm_label ?? 'N/A'}</p>
             </div>
             <div className="metric-card">
-              <h4>Remaining</h4>
-              <p>{formatMoney(treatment.total_remaining_amount)}</p>
+              <h4>Date</h4>
+              <p>Start Date: {formatDate(treatment.start_date, 'yyyy-MM-dd')}</p>
+              <p>End Date: {treatment.end_date ? formatDate(treatment.end_date, 'yyyy-MM-dd') : 'N/A'}</p>
+            </div>
+
+            <div className="metric-card">
+              <h4>Status</h4>
+              <StatusBadge status={treatment.status} />
             </div>
           </div>
 

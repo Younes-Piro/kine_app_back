@@ -92,9 +92,12 @@ export function SessionListPage() {
   const treatmentOptions = useMemo(() => {
     const map = new Map<number, string>();
     sessions.forEach((session) => {
-      const label = session.treatment_title ?? session.treatment_type_and_site;
+      const treatmentName = session.treatment_title ?? session.treatment_type_and_site;
       if (!map.has(session.treatment)) {
-        map.set(session.treatment, label || `Treatment #${session.treatment}`);
+        map.set(
+          session.treatment,
+          `#${session.treatment} - ${treatmentName || `Treatment #${session.treatment}`} (${session.client_full_name})`,
+        );
       }
     });
     return Array.from(map.entries())

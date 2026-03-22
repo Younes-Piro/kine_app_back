@@ -32,7 +32,8 @@ export function SessionTable({
     },
     {
       header: 'Treatment',
-      render: (session) => session.treatment_title ?? session.treatment_type_and_site,
+      render: (session) =>
+        `#${session.treatment} - ${session.treatment_title ?? session.treatment_type_and_site}`,
     },
     {
       header: 'Status',
